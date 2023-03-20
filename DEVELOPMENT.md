@@ -8,7 +8,7 @@ The Splunk environment integration consists of two pieces:  receipt of a webook,
 
 Initial development was done with a CURL to the CAR running locally to simulate the webhook, and a contaier running an HTTP server that responsed with a mock Splunk search result.
 
-As of this writing, Splunk doesn't offer a free development environment in the same way Atlassian does, so testing sending of a webhook still need sto be done with a manual CURL to your local CAR instance.  However, all of the search retrieval operations are read-only, so it's not totally unreasonable to use a real Splunk instances for development.
+As of this writing, Splunk doesn't offer a free development environment in the same way Atlassian does, so testing sending of a webhook still needs to be done with a manual CURL to your local CAR instance.  However, all of the search retrieval operations are read-only, so it's not totally unreasonable to use a real Splunk instances for development.
 
 For SplunkCloud, someone with Admin privileges needs to setup a user account and request a bearer token from Splunk. Note that for SplunkCloud, API access has to be requested from Splunk, to allow a set of IP addresses.
 
