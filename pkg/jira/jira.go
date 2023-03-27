@@ -31,32 +31,98 @@ import (
 )
 
 const managedLabel string = "compliance-audit-router-managed"
+const apiPath string = "/rest/api/3"
 
-func CreateTicket(user, manager string, searchResults splunk.SearchResult) error {
-	return nil
+// createBasicClient returns a *jiraClient with transport
+// for the host specified in the application configuration
+//
+// TODO: This may be different for non-cloud Jira instances
+// and might use the PAT transport client (see below) instead of the BasicAuth
+// transport for Oauth
+func createBasicClient() (*jira.Client, error) {
+	// Auth
+	transport := jira.BasicAuthTransport{
+		Username: config.AppConfig.JiraConfig.Username,
+		Password: config.AppConfig.JiraConfig.Token,
+	}
+
+	client, err := jira.NewClient(transport.Client(), config.AppConfig.JiraConfig.Host)
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+
+	log.Println("Connecting to: ", config.AppConfig.JiraConfig.Host)
+
+	return client, nil
 }
 
-// func Run is a wrapper for initial jira-go testing
-func Run() {
+// createPATCLient returns a *jiraClient with transport
+// for the host specified in the application configuration
+//
+// TODO: This might be required for non-cloud instances of Jira,
+// see the createBasicClient function above
+func createPATClient() (*jira.Client, error) {
 	// Auth
 	transport := jira.PATAuthTransport{
 		Token: config.AppConfig.JiraConfig.Token,
 	}
 
-	c, err := jira.NewClient(transport.Client(), config.AppConfig.JiraConfig.Host)
+	client, err := jira.NewClient(transport.Client(), config.AppConfig.JiraConfig.Host)
 	if err != nil {
-		fmt.Print(err)
+		log.Print(err)
+		return nil, err
 	}
 
-	issues, err := GetAllIssues(c, config.AppConfig.JiraConfig.Query)
+	log.Println("Connecting to: ", config.AppConfig.JiraConfig.Host)
+
+	return client, nil
+}
+
+func CreateTicket(user, manager string, searchResults splunk.SearchResult) error {
+	return nil
+}
+
+// createClient returns a *jiraClient with transport
+// This is a wrapper around createBasicClient and
+// createPATClient to work with the two potential hosts
+func createClient() (*jira.Client, error) {
+	if strings.HasSuffix(config.AppConfig.JiraConfig.Host, "atlassian.net") {
+		return createBasicClient()
+	}
+	return createPATClient()
+}
+
+// reconcile loops through all issues in the Jira project
+func reconcile() error {
+	client, err := createBasicClient()
 	if err != nil {
-		fmt.Print(err)
+		return err
+	}
+
+	issues, err := GetAllIssues(client, config.AppConfig.JiraConfig.Query)
+	if err != nil {
+		log.Print(err)
+		return err
 	}
 
 	for _, issue := range issues {
-		doSomethingWithIssue(c, &issue)
+		fmt.Print(issue.Key)
+		return err
 	}
+
+	return nil
+
 }
+
+//	issues, err := GetAllIssues(c, config.AppConfig.JiraConfig.Query)
+//	if err != nil {
+//		fmt.Print(err)
+//	}
+//
+//	for _, issue := range issues {
+//		doSomethingWithIssue(c, &issue)
+//	}
 
 func GetAllIssues(client *jira.Client, searchString string) ([]jira.Issue, error) {
 	last := 0

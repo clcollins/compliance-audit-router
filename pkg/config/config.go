@@ -63,6 +63,7 @@ type SplunkConfig struct {
 type JiraConfig struct {
 	Host          string
 	AllowInsecure bool
+	Username      string
 	Token         string
 	Query         string
 }
@@ -100,6 +101,8 @@ func init() {
 	for _, x := range []*string{
 		&AppConfig.LDAPConfig.Host,
 		&AppConfig.JiraConfig.Host,
+		&AppConfig.JiraConfig.Username,
+		&AppConfig.JiraConfig.Token,
 		&AppConfig.SplunkConfig.Host,
 		&AppConfig.SplunkConfig.Token,
 	} {
