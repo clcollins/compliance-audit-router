@@ -17,6 +17,7 @@ limitations under the License.
 package listeners
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -78,7 +79,15 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the alert search results
 	var alert splunk.Webhook
 
-	err := helpers.DecodeJSONRequestBody(w, r, &alert)
+	client, err := jira.DefaultClient()
+	if err != nil {
+		log.Println(err)
+		setResponse(w, http.StatusInternalServerError, map[string]string{"Content-Type": "text/plain"}, "failed to create Jira client")
+		// Should this panic?  Return?
+		return
+	}
+
+	err = helpers.DecodeJSONRequestBody(w, r, &alert)
 	if err != nil {
 		var mr *helpers.MalformedRequest
 		if errors.As(err, &mr) {
@@ -90,18 +99,49 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Received alert from Splunk:", alert.Sid)
+	searchResults, err := splunk.RetrieveSearchFromAlert(alert.Sid)
+	if err != nil {
+		log.Printf("error retrieving search results from Splunk: %v", err)
 
-	// searchResults, err := splunk.RetrieveSearchFromAlert(alert.Sid)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	w.Header().Set("Content-Type", "text/plain")
-	// 	w.Write([]byte("failed alert lookup"))
-	// 	return
-	// }
+		alertJson, jsonErr := json.MarshalIndent(alert, "", "    ")
+		if jsonErr != nil {
+			log.Printf("error marshalling webhook data to JSON : %v", jsonErr)
+		}
 
-	fmt.Printf("%+v\n", alert)
+		ticketDetails := fmt.Sprintf(
+			"A Compliance Alert was received from Splunk, but the alert details could not be retrieved. "+
+				"Please review:\n"+
+				"Splunk Webhook Data: %s\n"+
+				"\nError: %s\n", string(alertJson), err,
+		)
+
+		// Add a note to the ticket details if the webhook data might be incomplete
+		if jsonErr != nil {
+			ticketDetails += fmt.Sprintf("\n\nIn addition, an error occurred attempting to unmarshal the incoming webhook details: %v", err)
+		}
+
+		createErr := jira.CreateGenericTicket(client.User, client.Issue, ticketDetails)
+
+		if createErr != nil {
+			log.Println(createErr)
+			setResponse(
+				w, http.StatusInternalServerError,
+				map[string]string{"Content-Type": "text/plain"},
+				fmt.Sprintf("failed Splunk alert lookup and unable to create a follow up Jira ticket - Splunk Error: %v, Jira Error: %v", err, createErr),
+			)
+			return
+		}
+
+		setResponse(
+			w, http.StatusInternalServerError,
+			map[string]string{"Content-Type": "text/plain"},
+			fmt.Sprintf("failed Splunk alert lookup: %v", err),
+		)
+
+		return
+	}
+
+	fmt.Printf("%+v\n", searchResults)
 
 	os.Exit(1)
 
@@ -111,12 +151,6 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		setResponse(w, http.StatusInternalServerError, map[string]string{"Content-Type": "text/plain"}, "failed ldap lookup")
 		return
-	}
-
-	client, err := jira.DefaultClient()
-	if err != nil {
-		log.Println(err)
-		setResponse(w, http.StatusInternalServerError, map[string]string{"Content-Type": "text/plain"}, "failed to create Jira client")
 	}
 
 	err = jira.CreateTicket(client.User, client.Issue, user, manager, "test description")
