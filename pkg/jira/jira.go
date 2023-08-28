@@ -60,34 +60,6 @@ func DefaultClient() (*jira.Client, error) {
 	return jira.NewClient(transportClient, config.AppConfig.JiraConfig.Host)
 }
 
-func CreateGenericTicket(userService *jira.UserService, issueService *jira.IssueService, description string) error {
-	var err error
-
-	reporter, _, err := userService.GetSelf()
-	if err != nil {
-		return fmt.Errorf("failed to get Jira user for reporter: %w", err)
-	}
-
-	jiraIssue := &jira.Issue{
-		Fields: &jira.IssueFields{
-			Reporter:    reporter,
-			Description: description,
-			Type:        jira.IssueType{Name: config.AppConfig.JiraConfig.IssueType},
-			Project:     jira.Project{Key: config.AppConfig.JiraConfig.Key},
-			Summary:     failedAlertRetrievalSummary,
-		},
-	}
-
-	createdIssue, _, err := issueService.Create(jiraIssue)
-	if err != nil {
-		return fmt.Errorf("failed to create issue: %w", err)
-	}
-
-	log.Printf("created new issue with key %v", createdIssue.Key)
-
-	return err
-}
-
 func CreateTicket(userService *jira.UserService, issueService *jira.IssueService, user string, manager string, description string) error {
 	reporterUser, _, err := userService.GetSelf()
 	if err != nil {

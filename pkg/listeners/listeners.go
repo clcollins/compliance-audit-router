@@ -120,7 +120,7 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 			ticketDetails += fmt.Sprintf("\n\nIn addition, an error occurred attempting to unmarshal the incoming webhook details: %v", err)
 		}
 
-		createErr := jira.CreateGenericTicket(client.User, client.Issue, ticketDetails)
+		createErr := jira.CreateTicket(client.User, client.Issue, "", "", ticketDetails)
 
 		if createErr != nil {
 			log.Println(createErr)
