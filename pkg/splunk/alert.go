@@ -29,11 +29,6 @@ func NewAlertDetails(result SearchResult) AlertDetails {
 	}
 }
 
-// Webhook.Details returns the AlertDetails for a webhook
-func (w Webhook) Details() AlertDetails {
-	return NewAlertDetails(w.Result)
-}
-
 // Alert.Details returns a slice of AlertDetails from the alert search results
 func (w Alert) Details() []AlertDetails {
 	alerts := []AlertDetails{}

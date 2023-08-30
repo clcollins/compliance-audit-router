@@ -10,7 +10,7 @@ const SplunkTimeFormat = "2006-01-02T15:04:05.GMT"
 
 func (a SearchResult) string(field string) string {
 	if i, ok := a[field]; !ok {
-		log.Println("No such field:", field)
+		log.Printf("No such field: %s", field)
 		return ""
 	} else {
 		return fmt.Sprint(i)
@@ -42,5 +42,5 @@ func (a SearchResult) time(field string) time.Time {
 			log.Printf("Error parsing timestamp: %v", err)
 		}
 	}
-	return time.Now()
+	return time.Time{}
 }

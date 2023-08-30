@@ -54,13 +54,13 @@ type SearchResults struct {
 	Highlighted map[string]string   `json:"highlighted"`
 }
 
-type SplunkServer config.SplunkConfig
+type Server config.SplunkConfig
 
 // NOTE: The webhook itself contains the search result. So this may not be necessary
 
 // RetrieveSearchFromAlert parses the received webhook, and looks up the data for the alert in Splunk,
 // and returns the information in an Alert struct
-func (s SplunkServer) RetrieveSearchFromAlert(sid string) (Alert, error) {
+func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 
 	splunkHttpClient := &http.Client{
 		Transport: &http.Transport{
@@ -97,7 +97,7 @@ func (s SplunkServer) RetrieveSearchFromAlert(sid string) (Alert, error) {
 		return alert, err
 	}
 
-	log.Printf("Received alert from Splunk: %s, %v", alert.SearchID, alert.Details())
+	log.Printf("retrieved alert from Splunk: %s, %v", alert.SearchID, alert.Details())
 	return alert, err
 
 }

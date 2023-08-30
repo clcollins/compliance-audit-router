@@ -51,6 +51,7 @@ type Webhook struct {
 func DefaultClient() (*jira.Client, error) {
 	var transportClient *http.Client
 	if config.AppConfig.JiraConfig.Dev {
+		log.Printf("WARNING: Using basic auth for Jira client development\n")
 		transportClient = basicAuthClient(config.AppConfig.JiraConfig.Username, config.AppConfig.JiraConfig.Token)
 	} else {
 		transportClient = patAuthClient(config.AppConfig.JiraConfig.Token)
@@ -210,7 +211,7 @@ func getUserByName(userService *jira.UserService, username string) (*jira.User, 
 	}
 
 	if jiraUserLen := len(users); jiraUserLen != 1 {
-		return nil, fmt.Errorf("error finding user %v: expected 1 user but found %v\n", username, jiraUserLen)
+		return nil, fmt.Errorf("error finding user %v: expected 1 user but found %v", username, jiraUserLen)
 	}
 	return &users[0], nil
 }

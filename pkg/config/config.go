@@ -17,7 +17,6 @@ limitations under the License.
 package config
 
 import (
-	"log"
 	"net/url"
 	"os"
 
@@ -89,8 +88,6 @@ func init() {
 	if err != nil {            // Handle errors reading the config file
 		panic(err)
 	}
-
-	log.Printf("Using config file: %s", viper.ConfigFileUsed())
 
 	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
 	viper.SetDefault("Verbose", true)
