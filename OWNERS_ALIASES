@@ -1,0 +1,22 @@
+# See the OWNERS_ALIASES docs: https://git.k8s.io/community/contributors/guide/owners.md#OWNERS_ALIASES
+
+aliases:
+  team-rocket:
+  - aliceh
+  - anispate
+  - bdmiller3
+  - clcollins
+  - mjlshen
+  - tnierman
+  - yithian
+  team-security:
+  - gsleeman
+  - jaybeeunix
+  - karthikperu7
+  - sam-nguyen7
+  - wshearn
+  car-maintainers:
+  - clcollins
+  - karthikperu7
+  - mjlshen
+  - sam-nguyen7
