@@ -39,11 +39,10 @@ splunkconfig:
 
 Concepts:
 
-1. Splunk alerts are just Splunk Searches that run on some schedule.  The alert fires of the search turns up a set of results.
-2. The Splunk webhook will send the ID of a specific search + job for the alert that fires.
-3. The results of the search can be retrieved from the Splunk API with the search id ("search_id" in Splunk-API speak).  The search id will look something like `scheduler_abcdefg0123456789__search__RMDabcdefg0123456789_at_1674590400_80909`
-
-Retrieval of the search id from the webhook is trivial.
+1. Splunk alerts are just Splunk Searches that run on some schedule.  The alert fires if the search turns up a set of results.
+2. The Splunk webhook will send the ID of a specific search + job for the alert that fires. [See 'Example Alert Payload' below](#example-alert-payload) 
+3. The results of the search can be retrieved from the Splunk API with the search id ("search_id" in Splunk-API speak).  The search id will look something like `scheduler_abcdefg0123456789__search__RMDabcdefg0123456789_at_1674590400_80909`. 
+4. The search id can be retrieved from the Alert Payload from the `sid` field in the payload.  
 
 Retrieval of the results of the search can be done by via the API: `https://your_splunk_server:port/services/search/v2/jobs/{search_id}/results`.  The results will return, among other data, an array of `results[]`, containing a representation of the hits for that particular search.  Each of the results in the array represent a specific audit alert to be triaged by the Compliance Audit Router - eg. each element in the array should turn into a specific ticket for audit purposes.
 
@@ -57,6 +56,28 @@ curl -H "Authorization: Bearer $(jq -r .token .splunk_api )" \
      -d output_mode=json \
      https://your_splunk_server:port/services/search/v2/jobs/scheduler_foobarbaz__search__RMDfoobarbaz_at_1674590400_80909/results
 ```
+
+See [https://docs.splunk.com/Documentation/SplunkCloud/9.0.2305/RESTREF/RESTsearch#search.2Fv2.2Fjobs.2F.7Bsearch_id.7D.2Fresults](https://docs.splunk.com/Documentation/SplunkCloud/9.0.2305/RESTREF/RESTsearch#search.2Fv2.2Fjobs.2F.7Bsearch_id.7D.2Fresults) for more information about the Splunk Search results API endpoint.
+
+<a name="example-alert-payload"></a>
+**_Example Alert Payload_**
+
+An Alert webhook payload will look similar to this:
+
+```json
+{
+	"result": {
+		"sourcetype" : "_json",
+		"count" : "8"
+	},
+	"sid" : "scheduler_foobarbaz__search__RMDfoobarbaz_at_1674590400_80909/results",
+	"results_link" : "https://your_splunk_server:port/services/search/v2/jobs/scheduler_foobarbaz__search__RMDfoobarbaz_at_1674590400_80909",
+	"search_name" : null,
+	"owner" : "admin",
+	"app" : "search"
+}
+```
+
 
 ## LDAP
 
