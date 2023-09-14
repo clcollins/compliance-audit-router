@@ -17,13 +17,22 @@ limitations under the License.
 package listeners
 
 import (
-	"github.com/go-chi/chi/v5"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 )
+
+func TestMain(m *testing.M) {
+	log.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestListenerURIs(t *testing.T) {
 	for _, l := range Listeners {
@@ -136,8 +145,8 @@ func TestProcessJiraWebhook(t *testing.T) {
 			name:                "empty webhook should fail",
 			incomingWebhookBody: "",
 			status:              http.StatusBadRequest,
-			contentType:         "text/plain",
-			expectedBody:        "failed to parse webhook",
+			contentType:         "text/plain; charset=utf-8",
+			expectedBody:        "Request body must not be empty",
 		},
 	}
 

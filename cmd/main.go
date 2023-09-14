@@ -18,10 +18,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/spf13/viper"
 
 	"github.com/openshift/compliance-audit-router/pkg/config"
 	"github.com/openshift/compliance-audit-router/pkg/listeners"
@@ -30,6 +32,8 @@ import (
 var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
 
 func main() {
+	log.Printf("Using config file: %s", viper.ConfigFileUsed())
+
 	r := chi.NewRouter()
 	r.Use(middleware.DefaultLogger)
 

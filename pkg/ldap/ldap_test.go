@@ -1,6 +1,17 @@
 package ldap
 
-import "testing"
+import (
+	"io"
+	"log"
+	"os"
+	"testing"
+)
+
+// Silence logto
+func TestMain(m *testing.M) {
+	log.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
 
 func TestGetUID(t *testing.T) {
 	tests := []struct {

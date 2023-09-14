@@ -17,9 +17,11 @@ limitations under the License.
 package splunk
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -38,13 +40,18 @@ var EXPECTED_ALERT_DETAILS = []AlertDetails{{
 	Reasons:    []string{},
 }}
 
-func NewTestServer() (*httptest.Server, *SplunkServer) {
+func TestMain(m *testing.M) {
+	log.SetOutput(io.Discard)
+	os.Exit(m.Run())
+}
+
+func NewTestServer() (*httptest.Server, *Server) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(TEST_SEARCH_API_RESPONSE))
 	}))
-	splunkserver := SplunkServer(config.SplunkConfig{
+	splunkserver := Server(config.SplunkConfig{
 		Token:         "test",
 		Host:          server.URL,
 		AllowInsecure: true,
@@ -59,7 +66,7 @@ func TestSplunkServer_RetrieveSearchFromAlert(t *testing.T) {
 	server, splunkserver := NewTestServer()
 	tests := []struct {
 		name         string
-		splunkserver SplunkServer
+		splunkserver Server
 		args         args
 		want         []AlertDetails
 		wantErr      bool

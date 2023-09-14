@@ -1,0 +1,11 @@
+{
+	"result": {
+		"sourcetype" : "_json",
+		"count" : "8"
+	},
+	"sid" : "scheduler_foobarbaz__search__RMDfoobarbaz_at_1674590400_80909/results",
+	"results_link" : "https://your_splunk_server:port/services/search/v2/jobs/scheduler_foobarbaz__search__RMDfoobarbaz_at_1674590400_80909",
+	"search_name" : null,
+	"owner" : "admin",
+	"app" : "search"
+}
