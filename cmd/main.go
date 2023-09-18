@@ -27,6 +27,8 @@ import (
 
 	"github.com/openshift/compliance-audit-router/pkg/config"
 	"github.com/openshift/compliance-audit-router/pkg/listeners"
+
+	"github.com/openshift/compliance-audit-router/pkg/metrics"
 )
 
 var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
@@ -37,7 +39,11 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.DefaultLogger)
 
+	log.Printf("Initializing routes")
 	listeners.InitRoutes(r)
+
+	log.Printf("Registering metrics")
+	metrics.RegisterMetrics()
 
 	log.Printf("Listening on %s", portString)
 	log.Fatal(http.ListenAndServe(portString, r))
