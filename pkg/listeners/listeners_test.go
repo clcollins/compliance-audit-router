@@ -47,12 +47,12 @@ func TestInitRoutes(t *testing.T) {
 	r := chi.NewRouter()
 	InitRoutes(r)
 
-	expectedRouteLen := 4
+	expectedRouteLen := 5
 	if routeLen := len(r.Routes()); routeLen != expectedRouteLen {
 		t.Errorf("Error initializing routes. Expected %v but got %v.", expectedRouteLen, routeLen)
 	}
 
-	paths := []string{"/readyz", "/healthz", "/api/v1/alert", "/api/v1/jira_webhook"}
+	paths := []string{"/readyz", "/healthz", "/api/v1/alert", "/api/v1/jira_webhook", "/metrics"}
 
 	for _, route := range r.Routes() {
 		found := false
@@ -76,8 +76,8 @@ func TestRespondOKHandler(t *testing.T) {
 	if status := recorder.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
-	if body := recorder.Body.String(); body != "OK" {
-		t.Errorf("handler returned wrong body: got %v want %v", body, "OK")
+	if body := recorder.Body.String(); body != "ok" {
+		t.Errorf("handler returned wrong body: got %v want %v", body, "ok")
 	}
 }
 
