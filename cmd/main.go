@@ -31,10 +31,14 @@ import (
 	"github.com/openshift/compliance-audit-router/pkg/metrics"
 )
 
-var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
+func init() {
+	config.LoadConfig()
+}
 
 func main() {
 	log.Printf("Using config file: %s", viper.ConfigFileUsed())
+
+	var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
 
 	r := chi.NewRouter()
 	r.Use(middleware.DefaultLogger)

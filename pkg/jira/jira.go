@@ -50,7 +50,7 @@ type Webhook struct {
 
 func DefaultClient() (*jira.Client, error) {
 	var transportClient *http.Client
-	if config.AppConfig.JiraConfig.Dev {
+	if config.AppConfig.JiraConfig.Username != "" {
 		log.Printf("WARNING: Using basic auth for Jira client development\n")
 		transportClient = basicAuthClient(config.AppConfig.JiraConfig.Username, config.AppConfig.JiraConfig.Token)
 	} else {
