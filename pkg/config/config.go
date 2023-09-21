@@ -122,7 +122,6 @@ func LoadConfig() {
 // having to fix one, run the program, fix the next one, etc.
 func (a *Config) Valid() bool {
 	var configErrors []error
-	var valid bool = true
 
 	validationFunctions := []func(a *Config) []error{
 		fieldsAreNotNil,
@@ -131,19 +130,15 @@ func (a *Config) Valid() bool {
 	}
 
 	for _, f := range validationFunctions {
-		errors := f(a)
-		if errors != nil {
-			configErrors = append(configErrors, errors...)
-		}
+		configErrors = append(configErrors, f(a)...)
 	}
 
-	err := errors.Join(configErrors...)
-	if err != nil {
-		valid = false
-		log.Print(err)
+	if configErrors != nil {
+		log.Print(errors.Join(configErrors...))
+		return false
 	}
 
-	return valid
+	return true
 }
 
 // fieldsAreNotNil tests that he required configs values have been set
