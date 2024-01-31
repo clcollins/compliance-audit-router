@@ -1,0 +1,6 @@
+IMAGE_REGISTRY?=quay.io
+IMAGE_REPOSITORY?=app-sre
+IMAGE_NAME?=compliance-audit-router
+define ADDITIONAL_IMAGE_SPECS
+Dockerfile $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$(IMAGE_NAME):$(CURRENT_COMMIT)
+endef
