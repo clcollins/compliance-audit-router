@@ -1,5 +1,4 @@
-IMAGE_NAME := compliance-audit-router
-
+include project.mk
 include boilerplate/generated-includes.mk
 
 SHELL := /usr/bin/env bash
