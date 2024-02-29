@@ -1,0 +1,7 @@
+version: '3'
+services:
+  compliance-audit-router:
+    image: compliance-audit-router:latest
+    restart: on-failure
+    ports:
+      - 8080:8080

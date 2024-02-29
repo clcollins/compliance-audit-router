@@ -1,3 +1,23 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Setting up a development environment](#setting-up-a-development-environment)
+  - [Splunk](#splunk)
+    - [Setup Splunk config for CAR](#setup-splunk-config-for-car)
+    - [From Webhook to Search Results](#from-webhook-to-search-results)
+  - [LDAP](#ldap)
+    - [Setup LDAP config for CAR](#setup-ldap-config-for-car)
+  - [Jira](#jira)
+    - [Create a Project in your instance](#create-a-project-in-your-instance)
+    - [Enabling Permissions for your project](#enabling-permissions-for-your-project)
+    - [Setup Jira config for CAR](#setup-jira-config-for-car)
+  - [Container Development](#container-development)
+    - [Building the image](#building-the-image)
+    - [Testing the container image](#testing-the-container-image)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Setting up a development environment
 
 The compliance-audit-router interacts with three external services (at the moment): Splunk, LDAP and Jira. This document describes how to setup a local development environment to simulate or interact with these services.
@@ -174,3 +194,30 @@ jiraconfig:
     sre: Pending Approval
     manager: Done
 ```
+
+## Container Development
+
+### Building the image
+
+The CI setup for this project is designed for use with the OpenShift Dedicated internal App-SRE and SRE Platform teams' CI tools, but can be run locally as well.  A `build-image` make target is provided in the Makefile and will build the binary and a local image, and tag the image as `compliance-audit-router:latest`.
+
+The image build will exit with a failure if your local git checkout is not clean (you have uncommitted changes).  Committing these changes, or setting `ALLOW_DIRTY_CHECKOUT=TRUE` will allow the build to proceed.
+
+### Testing the container image
+
+A `compose.yaml` file is provided for use with [Podman Desktop with a compose engine](https://podman-desktop.io/docs/compose), standalone [Podman Compose](https://github.com/containers/podman-compose), or [Docker Compose](https://docs.docker.com/compose/).
+
+To get a running instance of compliance-audit-router locally, you just need to create the compose service, copy a configuration file to the root of the container, and start the service.
+
+```
+# Create the compose service
+podman compose create
+
+# Copy a configuration file to /compliance-audit-router.yaml in the container
+podman compose copy <path to your config file> compliance-audit-router-compliance-audit-router-1:/compliance-audit-router.yaml
+
+# Start the service
+podman compose up --detach
+```
+
+The container running compliance-audit-router will now be visible in the output of `podman ps` or within the Podman Desktop application window.  The compliance-audit-router itself will be listening on [http://localhost:8080](http://localhost:8080) of your host machine.

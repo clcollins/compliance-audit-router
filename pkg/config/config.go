@@ -88,6 +88,7 @@ func LoadConfig() {
 		panic(err)
 	}
 
+	viper.AddConfigPath(".")                          // Look for config in the cwd
 	viper.AddConfigPath(home + "/.config/" + Appname) // Look for config in $HOME/.config/compliance-audit-router
 	viper.SetConfigType("yaml")
 	viper.SetConfigName(Appname)
