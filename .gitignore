@@ -1,6 +1,10 @@
 # Internal to-do task list
 TODO.md
 
+# Logs
+*.log
+debug*
+
 # Slideshow
 *slides.md
 
@@ -41,3 +45,4 @@ build/_output/
 
 # Temp
 EXAMPLE_*
+
