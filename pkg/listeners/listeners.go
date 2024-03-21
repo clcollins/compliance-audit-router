@@ -271,7 +271,7 @@ func ProcessJiraWebhook(w http.ResponseWriter, r *http.Request) {
 			ple := p.LabelInput()
 			ple["error_type"] = "malformed_request"
 			log.Printf("received malformed request: %s\n", mr.Msg)
-			metrics.MetricJiraWebhookProcessFailures.With(pl).Inc()
+			metrics.MetricJiraWebhookProcessFailures.With(ple).Inc()
 			// This is a client error, so we return the status code and message
 			si.code = mr.Status
 			si.msg = []string{mr.Msg}
