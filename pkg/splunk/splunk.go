@@ -70,7 +70,7 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 		},
 	}
 
-	url := fmt.Sprintf("%s/services/search/jobs/%s/results?output_mode=json", s.Host, sid)
+	url := fmt.Sprintf("%s/services/search/v2/jobs/%s/results?output_mode=json", s.Host, sid)
 
 	var alert = Alert{
 		SearchID:      sid,
@@ -89,7 +89,7 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 		log.Printf("splunk.RetrieveSearchFromAlert(): httpRequest: %+v", req)
 	}
 
-	bearerToken := "Bearer" + s.Token
+	bearerToken := fmt.Sprintf("Bearer %s", s.Token)
 	req.Header.Add("Authorization", bearerToken)
 
 	if config.AppConfig.Verbose {
