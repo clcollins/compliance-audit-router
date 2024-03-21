@@ -39,6 +39,7 @@ var AppConfig Config
 
 type Config struct {
 	Verbose         bool
+	DryRun          bool
 	ListenPort      int
 	MessageTemplate string
 
@@ -103,6 +104,7 @@ func LoadConfig() {
 
 	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
 	viper.SetDefault("Verbose", false)
+	viper.SetDefault("DryRun", false)
 	viper.SetDefault("ListenPort", 8080)
 
 	err = viper.Unmarshal(&AppConfig)

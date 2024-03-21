@@ -36,19 +36,23 @@ func init() {
 }
 
 func main() {
-	log.Printf("Using config file: %s", viper.ConfigFileUsed())
+	log.Printf("using config file: %s", viper.ConfigFileUsed())
+
+	if config.AppConfig.DryRun {
+		log.Printf("running in dry-run mode")
+	}
 
 	var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
 
 	r := chi.NewRouter()
 	r.Use(middleware.DefaultLogger)
 
-	log.Printf("Initializing routes")
+	log.Printf("initializing routes")
 	listeners.InitRoutes(r)
 
-	log.Printf("Registering metrics")
+	log.Printf("registering metrics")
 	metrics.RegisterMetrics()
 
-	log.Printf("Listening on %s", portString)
+	log.Printf("listening on %s", portString)
 	log.Fatal(http.ListenAndServe(portString, r))
 }

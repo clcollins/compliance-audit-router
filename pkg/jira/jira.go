@@ -61,6 +61,15 @@ func DefaultClient() (*jira.Client, error) {
 }
 
 func CreateTicket(userService *jira.UserService, issueService *jira.IssueService, user string, manager string, description string) error {
+
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have created Jira ticket with user, manager, description: %+v, %+v, %+v", user, manager, description)
+		if config.AppConfig.Verbose {
+			log.Printf("dry-run mode: *jira.UserService: %+v", userService)
+			log.Printf("dry-run mode: *jira.issueService: %+v", issueService)
+		}
+	}
+
 	reporterUser, _, err := userService.GetSelf()
 	if err != nil {
 		return fmt.Errorf("failed to get Jira user for reporter: %w", err)
@@ -93,10 +102,19 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 		jiraIssue.Fields.Labels = []string{managedLabel, fmt.Sprintf(sreLabel, sreUser.AccountID), fmt.Sprintf(managerLabel, managerUser.AccountID)}
 	}
 
-	createdIssue, _, err := issueService.Create(jiraIssue)
+	var createdIssue *jira.Issue
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have created Jira ticket with the following fields: %+v", jiraIssue)
+		jiraIssue.Key = "DRY-RUN-0000"
+		err = nil
+	} else {
+		createdIssue, _, err = issueService.Create(jiraIssue)
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to create issue: %w", err)
 	}
+
 	log.Printf("created new issue with key %v", createdIssue.Key)
 
 	messageTemplate, err := template.New("messageTemplate").Parse(config.AppConfig.MessageTemplate)
@@ -111,28 +129,49 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 	}
 
 	comment := &jira.Comment{Body: message.String()}
-	_, _, err = issueService.AddComment(createdIssue.ID, comment)
+
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have added comment to Jira ticket with the following body: %+v", comment)
+		err = nil
+	} else {
+		_, _, err = issueService.AddComment(createdIssue.ID, comment)
+	}
+
 	if err != nil {
 		return fmt.Errorf("issue %v was successfully created but failed to apply initial comment: %w", createdIssue.Key, err)
 	}
+
 	log.Printf("Initial comment successfully left on issue %v\n", createdIssue.Key)
 
 	initialStatusName := config.AppConfig.JiraConfig.Transitions[initialTransitionKey]
+
 	initialStatusId, err := getTransitionId(issueService, createdIssue.ID, initialStatusName)
 	if err != nil {
 		return fmt.Errorf("failed to fetch ID for status %v: %w", initialStatusName, err)
 	}
 
-	_, err = issueService.DoTransition(createdIssue.ID, initialStatusId)
-	if err != nil {
-		return fmt.Errorf("failed to transition issue %v to status %v: %w", createdIssue.Key, initialStatusName, err)
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have transitioned Jira ticket to status %v", initialStatusName)
+	} else {
+		_, err = issueService.DoTransition(createdIssue.ID, initialStatusId)
+		if err != nil {
+			return fmt.Errorf("failed to transition issue %v to status %v: %w", createdIssue.Key, initialStatusName, err)
+		}
 	}
+
 	log.Printf("Issue %v has been transitioned to state %v", createdIssue.Key, initialStatusName)
 
 	return nil
 }
 
 func HandleUpdate(issueService *jira.IssueService, webhook Webhook) error {
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have handled Jira webhook with issue, comment: %+v, %+v", webhook.Issue, webhook.Comment)
+		if config.AppConfig.Verbose {
+			log.Printf("dry-run mode: *jira.issueService: %+v", issueService)
+		}
+	}
+
 	webhookIssue, _, err := issueService.Get(webhook.Issue.ID, nil)
 	if err != nil {
 		return fmt.Errorf("failed to get issue %v from jira webhook: %w", webhook.Issue.Key, err)
@@ -191,6 +230,11 @@ func patAuthClient(token string) *http.Client {
 }
 
 func getTransitionId(issueService *jira.IssueService, issueId string, status string) (string, error) {
+	if config.AppConfig.DryRun {
+		log.Printf("dry-run mode: would have fetched transitions for Jira issue %v", issueId)
+		return "dry-run-transition-id", nil
+	}
+
 	transitions, _, err := issueService.GetTransitions(issueId)
 	if err != nil {
 		return "", err
