@@ -83,12 +83,29 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 		return alert, err
 	}
 
+	if config.AppConfig.Verbose {
+		log.Printf("splunk.RetrieveSearchFromAlert(): splunkHttpClient: %+v", splunkHttpClient)
+		log.Printf("splunk.RetrieveSearchFromAlert(): url: %+v", url)
+		log.Printf("splunk.RetrieveSearchFromAlert(): httpRequest: %+v", req)
+	}
+
 	bearerToken := "Bearer" + s.Token
 	req.Header.Add("Authorization", bearerToken)
+
+	if config.AppConfig.Verbose {
+		log.Print("splunk.RetrieveSearchFromAlert(): using bearer token authorization: TOKEN REDACTED")
+	}
 
 	resp, err := splunkHttpClient.Do(req)
 	if err != nil {
 		return alert, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return alert, fmt.Errorf("error retrieving search results from Splunk: %s", resp.Status)
+	}
+
+	if config.AppConfig.Verbose {
+		log.Printf("splunk.RetrieveSearchFromAlert(): response from Splunk server: %+v", resp)
 	}
 
 	// Process the response
