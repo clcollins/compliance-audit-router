@@ -39,7 +39,14 @@ func main() {
 	log.Printf("using config file: %s", viper.ConfigFileUsed())
 
 	if config.AppConfig.DryRun {
-		log.Printf("running in dry-run mode")
+		log.Printf("dryRun:     %t", config.AppConfig.DryRun)
+	}
+
+	if config.AppConfig.Verbose {
+		log.Printf("verbose:    %t", config.AppConfig.Verbose)
+		log.Printf("splunkHost: %s", config.AppConfig.SplunkConfig.Host)
+		log.Printf("ldapHost:   %s", config.AppConfig.LDAPConfig.Host)
+		log.Printf("jiraHost:   %s", config.AppConfig.JiraConfig.Host)
 	}
 
 	var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
