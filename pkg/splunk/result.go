@@ -27,6 +27,8 @@ func (a SearchResult) slice(field string) []string {
 			values = append(values, v)
 		case []string:
 			values = append(values, v...)
+		case []interface{}:
+			values = append(values, fmt.Sprint(v...))
 		default:
 			log.Printf("Unknown type for field %s: %T", field, v)
 		}

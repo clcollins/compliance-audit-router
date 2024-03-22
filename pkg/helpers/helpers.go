@@ -30,10 +30,10 @@ func DecodeJSONResponseBody(r *http.Response, dst interface{}) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, io.ErrUnexpectedEOF):
-			msg := fmt.Sprintf("Response body contains badly-formed JSON")
+			msg := "response body contains badly-formed JSON"
 			return errors.New(msg)
 		case errors.Is(err, io.EOF):
-			msg := "Response body must not be empty"
+			msg := "response body must not be empty"
 			return errors.New(msg)
 		default:
 			return err
@@ -42,7 +42,7 @@ func DecodeJSONResponseBody(r *http.Response, dst interface{}) error {
 
 	err = dec.Decode(&struct{}{})
 	if err != io.EOF {
-		msg := "Response body must only contain a single JSON object"
+		msg := "response body must only contain a single JSON object"
 		return errors.New(msg)
 	}
 

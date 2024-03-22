@@ -19,6 +19,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/url"
 	"os"
@@ -39,6 +40,7 @@ var AppConfig Config
 
 type Config struct {
 	Verbose         bool
+	DryRun          bool
 	ListenPort      int
 	MessageTemplate string
 
@@ -103,6 +105,7 @@ func LoadConfig() {
 
 	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
 	viper.SetDefault("Verbose", false)
+	viper.SetDefault("DryRun", false)
 	viper.SetDefault("ListenPort", 8080)
 
 	err = viper.Unmarshal(&AppConfig)
@@ -128,6 +131,7 @@ func (a *Config) Valid() bool {
 		fieldsAreNotNil,
 		hostFieldsAreParsable,
 		passwordOrTokenExistIfUsernameProvided,
+		templateCanBeParsed,
 	}
 
 	for _, f := range validationFunctions {
@@ -257,4 +261,16 @@ func passwordOrTokenExistIfUsernameProvided(a *Config) []error {
 	}
 
 	return passwordErrors
+}
+
+// templateCanBeParsed tests that the message template can be parsed or returns an error
+func templateCanBeParsed(a *Config) []error {
+	var templateErrors []error
+
+	_, err := template.New("messageTemplate").Parse(a.MessageTemplate)
+	if err != nil {
+		templateErrors = append(templateErrors, configError{Err: fmt.Sprintf("message template failed to parse: %s", err)})
+	}
+
+	return templateErrors
 }

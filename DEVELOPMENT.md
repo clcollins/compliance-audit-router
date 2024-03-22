@@ -24,9 +24,9 @@ The compliance-audit-router interacts with three external services (at the momen
 
 ## Splunk
 
-The Splunk environment integration consists of two pieces:  receipt of a webook, and retrieving a search result from the webook.
+The Splunk environment integration consists of two pieces:  receipt of a webhook, and retrieving a search result from the webhook.
 
-Initial development was done with a CURL to the CAR running locally to simulate the webhook, and a contaier running an HTTP server that responsed with a mock Splunk search result.
+Initial development was done with a CURL to the CAR running locally to simulate the webhook, and a container running an HTTP server that responds with a mock Splunk search result.
 
 As of this writing, Splunk doesn't offer a free development environment in the same way Atlassian does, so testing sending of a webhook still needs to be done with a manual CURL to your local CAR instance.  However, all of the search retrieval operations are read-only, so it's not totally unreasonable to use a real Splunk instances for development.
 
@@ -35,6 +35,8 @@ For SplunkCloud, someone with Admin privileges needs to setup a user account and
 1. Login to SplunkCloud, and select "Settings -> User"
 2. Create a user using "Splunk" authentication, and assign the desired roles. These should likely just be read-only access to the Search app results and indexes.
 3. Go to "Settings -> Tokens" and create a token for the new user.
+
+You will also need to add your IP/Subnet to the allow list in "Settings -> Server Settings -> IP Allow List Management" under "Search head API access". After adding an IP to the allowlist, it will take some time to propagate.
 
 You can test your API token by curling the search endpoint:
 
@@ -61,7 +63,7 @@ Concepts:
 
 1. Splunk alerts are just Splunk Searches that run on some schedule.  The alert fires if the search turns up a set of results.
 2. The Splunk webhook will send the ID of a specific search + job for the alert that fires. [See 'Example Alert Payload' below](#example-alert-payload) 
-3. The results of the search can be retrieved from the Splunk API with the search id ("search_id" in Splunk-API speak).  The search id will look something like `scheduler_abcdefg0123456789__search__RMDabcdefg0123456789_at_1674590400_80909`. 
+3. The results of the search can be retrieved from the Splunk API with the search id ("search_id" in Splunk-API speak).  The search id will look something like `scheduler_abcdefg0123456789__search__RMDabcdefg0123456789_at_1674590400_80909`.
 4. The search id can be retrieved from the Alert Payload from the `sid` field in the payload.  
 
 Retrieval of the results of the search can be done by via the API: `https://your_splunk_server:port/services/search/v2/jobs/{search_id}/results`.  The results will return, among other data, an array of `results[]`, containing a representation of the hits for that particular search.  Each of the results in the array represent a specific audit alert to be triaged by the Compliance Audit Router - eg. each element in the array should turn into a specific ticket for audit purposes.

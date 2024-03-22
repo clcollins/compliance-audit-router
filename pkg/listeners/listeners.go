@@ -106,18 +106,22 @@ func RespondOKHandler(w http.ResponseWriter, _ *http.Request) {
 
 // ProcessAlertHandler is the main logic processing alerts received from Splunk
 func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
+	if config.AppConfig.Verbose {
+		log.Printf("listeners.ProcessAlertHandler(): received http request: %+v", r)
+	}
 
 	// Assign a UUID to the event and set process info for metrics/logging
 	var p processInfo = processInfo{
 		uuid:    uuid.New().String(),
 		process: "ProcessAlertHandler",
 	}
-	var pl map[string]string = p.LabelInput()
-	log.SetPrefix(p.uuid)
+
+	// Prefix log messages with uuid plus a space for easier tracing
+	log.SetPrefix(p.uuid + " ")
+	defer log.SetPrefix("")
 
 	// Process the Received Webhook
-	metrics.MetricSplunkWebhookReceived.With(pl).Inc()
-	log.Println("received webhook from Splunk")
+	metrics.MetricSplunkWebhookReceived.With(p.LabelInput()).Inc()
 
 	var webhook splunk.Webhook
 
@@ -125,40 +129,48 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 	if decodeJSONerr != nil {
 		var mr *helpers.MalformedRequest
 		if errors.As(decodeJSONerr, &mr) {
-			pl["error_type"] = "malformed_request"
-			metrics.MetricSplunkWebhookProcessFailures.With(pl).Inc()
+			ple := p.LabelInput()
+			ple["error_type"] = "malformed_request"
+			metrics.MetricSplunkWebhookProcessFailures.With(ple).Inc()
 			log.Printf("received malformed request: %s\n", mr.Msg)
 			// This is a client error, so we return the status code and message
 			setResponse(w, statusInfo{code: mr.Status, msg: []string{mr.Msg}}, p)
 		} else {
-			pl["error_type"] = "unknown"
-			metrics.MetricSplunkWebhookProcessFailures.With(pl).Inc()
+			ple := p.LabelInput()
+			ple["error_type"] = "unknown"
+			metrics.MetricSplunkWebhookProcessFailures.With(ple).Inc()
 			log.Printf("failed decoding JSON request body: %s\n", decodeJSONerr.Error())
 			setResponse(w, status500, p)
 		}
 		return
 	}
 
+	if config.AppConfig.Verbose {
+		log.Printf("listeners.ProcessAlertHandler(): JSON data decoded to &splunk.Webhook : %+v", webhook)
+	}
+
 	// Create a Jira client
 	// This may be used to create issues on failures, too
 	jiraClient, jiraClientErr := jira.DefaultClient()
 	if jiraClientErr != nil {
-		metrics.MetricJiraClientCreateFailures.With(pl).Inc()
 		log.Printf("failed creating Jira client: %s\n", jiraClientErr.Error())
+		metrics.MetricJiraClientCreateFailures.With(p.LabelInput()).Inc()
 		setResponse(w, status500, p)
 		return
 	}
 
 	// Retrieve search results from webhook
-	metrics.MetricSplunkAlertSIDReceived.With(pl).Inc()
 	log.Println("retrieving alert from Splunk:", webhook.Sid)
+	metrics.MetricSplunkAlertSIDReceived.With(p.LabelInput()).Inc()
 
 	var searchResults splunk.Alert
 	searchResults, searchErr := splunk.Server(config.AppConfig.SplunkConfig).RetrieveSearchFromAlert(webhook.Sid)
 
 	if searchErr != nil {
-		metrics.MetricSplunkSearchResultQueryFailures.With(pl).Inc()
 		log.Printf("error retrieving search results from Splunk: %s", searchErr.Error())
+		ple := p.LabelInput()
+		ple["error_type"] = "retrieval_error"
+		metrics.MetricSplunkSearchResultQueryFailures.With(ple).Inc()
 
 		alertJson, jsonErr := json.MarshalIndent(webhook, "", "  ")
 		if jsonErr != nil {
@@ -183,13 +195,13 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 
 		createErr := jira.CreateTicket(jiraClient.User, jiraClient.Issue, "", "", ticketDetails)
 		if createErr != nil {
-			metrics.MetricJiraIssueCreateFailures.With(pl).Inc()
 			log.Printf("failed creating Jira ticket: %s", createErr.Error())
+			metrics.MetricJiraIssueCreateFailures.With(p.LabelInput()).Inc()
 			setResponse(w, status500, p)
 			return
 		}
 		// Increment the metric for Jira issues created to track errors
-		metrics.MetricJiraErrorIssuesCreated.With(pl).Inc()
+		metrics.MetricJiraErrorIssuesCreated.With(p.LabelInput()).Inc()
 
 		// Return a 500 for any error case
 		setResponse(w, status500, p)
@@ -199,12 +211,12 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Process each result in the alert search results
 	for _, complianceEvent := range searchResults.Details() {
-		metrics.MetricComplianceEventsFound.With(pl).Inc()
 		log.Println(complianceEvent)
+		metrics.MetricComplianceEventsFound.With(p.LabelInput()).Inc()
 		user, manager, ldapErr := ldap.LookupUser(complianceEvent.User)
 		if ldapErr != nil {
-			metrics.MetricLDAPLookupFailures.With(pl).Inc()
 			log.Printf("failed ldap lookup: %s\n", ldapErr.Error())
+			metrics.MetricLDAPLookupFailures.With(p.LabelInput()).Inc()
 
 			ticketDetails := fmt.Sprintf(
 				"A Compliance Alert was received from Splunk, but the user details could not be retrieved from LDAP."+
@@ -215,13 +227,13 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 
 			createErr := jira.CreateTicket(jiraClient.User, jiraClient.Issue, "", "", ticketDetails)
 			if createErr != nil {
-				metrics.MetricJiraIssueCreateFailures.With(pl).Inc()
 				log.Printf("failed creating Jira ticket: %s", createErr.Error())
+				metrics.MetricJiraIssueCreateFailures.With(p.LabelInput()).Inc()
 				setResponse(w, status500, p)
 				return
 			}
 			// Increment the metric for Jira issues created to track errors
-			metrics.MetricJiraErrorIssuesCreated.With(pl).Inc()
+			metrics.MetricJiraErrorIssuesCreated.With(p.LabelInput()).Inc()
 
 			// Return a 500 for any error case
 			setResponse(w, status500, p)
@@ -231,15 +243,15 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 		// Create a Jira issue for the compliance event
 		jiraCreateErr := jira.CreateTicket(jiraClient.User, jiraClient.Issue, user, manager, complianceEvent.AlertName)
 		if jiraCreateErr != nil {
-			metrics.MetricJiraIssueCreateFailures.With(pl).Inc()
 			log.Printf("failed creating Jira ticket: %s", jiraCreateErr.Error())
+			metrics.MetricJiraIssueCreateFailures.With(p.LabelInput()).Inc()
 			setResponse(w, status500, p)
 			return
 		}
 	}
 
 	// Everything worked!
-	metrics.MetricComplianceEventsProcessed.With(pl).Inc()
+	metrics.MetricComplianceEventsProcessed.With(p.LabelInput()).Inc()
 	setResponse(w, status200, p)
 }
 
@@ -256,16 +268,18 @@ func ProcessJiraWebhook(w http.ResponseWriter, r *http.Request) {
 		var mr *helpers.MalformedRequest
 		var si statusInfo
 		if errors.As(err, &mr) {
-			pl["error_type"] = "malformed_request"
-			metrics.MetricJiraWebhookProcessFailures.With(pl).Inc()
+			ple := p.LabelInput()
+			ple["error_type"] = "malformed_request"
 			log.Printf("received malformed request: %s\n", mr.Msg)
+			metrics.MetricJiraWebhookProcessFailures.With(ple).Inc()
 			// This is a client error, so we return the status code and message
 			si.code = mr.Status
 			si.msg = []string{mr.Msg}
 		} else {
-			pl["error_type"] = "unknown"
-			metrics.MetricJiraWebhookProcessFailures.With(pl).Inc()
+			ple := p.LabelInput()
+			ple["error_type"] = "unknown"
 			log.Printf("failed decoding JSON request body: %s\n", err.Error())
+			metrics.MetricJiraWebhookProcessFailures.With(ple).Inc()
 			si.code = http.StatusInternalServerError
 			si.msg = []string{genericErrorMsg}
 		}
@@ -275,14 +289,14 @@ func ProcessJiraWebhook(w http.ResponseWriter, r *http.Request) {
 
 	client, err := jira.DefaultClient()
 	if err != nil {
-		log.Println(err)
+		log.Print(err)
 		metrics.MetricJiraClientCreateFailures.With(pl).Inc()
 		setResponse(w, status500, p)
 	}
 
 	err = jira.HandleUpdate(client.Issue, webhook)
 	if err != nil {
-		log.Println(err)
+		log.Print(err)
 		metrics.MetricJiraIssueUpdateFailures.With(pl).Inc()
 		setResponse(w, status500, p)
 		return
