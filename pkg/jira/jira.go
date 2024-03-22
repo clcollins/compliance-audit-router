@@ -174,6 +174,8 @@ func HandleUpdate(issueService *jira.IssueService, webhook Webhook) error {
 		if config.AppConfig.Verbose {
 			log.Printf("jiraHandleUpdate(): dry-run mode: *jira.issueService: %+v", issueService)
 		}
+
+		return nil
 	}
 
 	webhookIssue, _, err := issueService.Get(webhook.Issue.ID, nil)
