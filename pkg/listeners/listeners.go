@@ -213,31 +213,40 @@ func ProcessAlertHandler(w http.ResponseWriter, r *http.Request) {
 	for _, complianceEvent := range searchResults.Details() {
 		log.Println(complianceEvent)
 		metrics.MetricComplianceEventsFound.With(p.LabelInput()).Inc()
-		user, manager, ldapErr := ldap.LookupUser(complianceEvent.User)
-		if ldapErr != nil {
-			log.Printf("failed ldap lookup: %s\n", ldapErr.Error())
-			metrics.MetricLDAPLookupFailures.With(p.LabelInput()).Inc()
 
-			ticketDetails := fmt.Sprintf(
-				"A Compliance Alert was received from Splunk, but the user details could not be retrieved from LDAP."+
-					"Please review and assign accordingly:\n"+
-					"Compliance Data: %+v\n"+
-					"\nError: %s\n", complianceEvent, ldapErr.Error(),
-			)
+		var user string = complianceEvent.User
+		var manager string = ""
 
-			createErr := jira.CreateTicket(jiraClient.User, jiraClient.Issue, "", "", ticketDetails)
-			if createErr != nil {
-				log.Printf("failed creating Jira ticket: %s", createErr.Error())
-				metrics.MetricJiraIssueCreateFailures.With(p.LabelInput()).Inc()
+		// If LDAP is enabled, look up the user and manager
+		// This may be deprecated in the future
+		if config.AppConfig.LDAPConfig.Enabled {
+			var ldapErr error
+			user, manager, ldapErr = ldap.LookupUser(complianceEvent.User)
+			if ldapErr != nil {
+				log.Printf("failed ldap lookup: %s\n", ldapErr.Error())
+				metrics.MetricLDAPLookupFailures.With(p.LabelInput()).Inc()
+
+				ticketDetails := fmt.Sprintf(
+					"A Compliance Alert was received from Splunk, but the user details could not be retrieved from LDAP."+
+						"Please review and assign accordingly:\n"+
+						"Compliance Data: %+v\n"+
+						"\nError: %s\n", complianceEvent, ldapErr.Error(),
+				)
+
+				createErr := jira.CreateTicket(jiraClient.User, jiraClient.Issue, "", "", ticketDetails)
+				if createErr != nil {
+					log.Printf("failed creating Jira ticket: %s", createErr.Error())
+					metrics.MetricJiraIssueCreateFailures.With(p.LabelInput()).Inc()
+					setResponse(w, status500, p)
+					return
+				}
+				// Increment the metric for Jira issues created to track errors
+				metrics.MetricJiraErrorIssuesCreated.With(p.LabelInput()).Inc()
+
+				// Return a 500 for any error case
 				setResponse(w, status500, p)
 				return
 			}
-			// Increment the metric for Jira issues created to track errors
-			metrics.MetricJiraErrorIssuesCreated.With(p.LabelInput()).Inc()
-
-			// Return a 500 for any error case
-			setResponse(w, status500, p)
-			return
 		}
 
 		// Create a Jira issue for the compliance event
