@@ -57,6 +57,7 @@ type LDAPConfig struct {
 	SearchBase         string
 	Scope              string
 	Attributes         []string
+	Enabled            bool
 }
 
 type SplunkConfig struct {

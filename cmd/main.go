@@ -43,10 +43,14 @@ func main() {
 	}
 
 	if config.AppConfig.Verbose {
-		log.Printf("verbose:    %t", config.AppConfig.Verbose)
-		log.Printf("splunkHost: %s", config.AppConfig.SplunkConfig.Host)
-		log.Printf("ldapHost:   %s", config.AppConfig.LDAPConfig.Host)
-		log.Printf("jiraHost:   %s", config.AppConfig.JiraConfig.Host)
+		log.Printf("verbose:     %t", config.AppConfig.Verbose)
+		log.Printf("ldapEnabled: %t", config.AppConfig.LDAPConfig.Enabled)
+
+		if config.AppConfig.LDAPConfig.Enabled {
+			log.Printf("ldapHost:    %s", config.AppConfig.LDAPConfig.Host)
+		}
+		log.Printf("splunkHost:  %s", config.AppConfig.SplunkConfig.Host)
+		log.Printf("jiraHost:    %s", config.AppConfig.JiraConfig.Host)
 	}
 
 	var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
