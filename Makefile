@@ -64,3 +64,10 @@ boilerplate-update:
 .PHONY: list
 list:
 	@LC_ALL=C $(MAKE) -pRrq -f $(firstword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+# Helper to ensure license text
+# Requires https://github.com/google/addlicense
+# `go install github.com/google/addlicense@latest`
+.PHONY: license
+license:
+	@addlicense -c "Red Hat, Inc."  -l apache -v -y 2021-2024 .*go **/*.go **/**/*.go
