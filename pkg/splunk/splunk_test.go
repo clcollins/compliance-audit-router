@@ -32,12 +32,15 @@ import (
 const TEST_SEARCH_API_RESPONSE string = `{"preview":false,"init_offset":0,"messages":[],"fields":[{"name":"_time"},{"name":"alertname","type":"str"},{"name":"clusterid","type":"str"},{"name":"group","type":"str"},{"name":"timestamp","type":"str"},{"name":"username","type":"str"}],"results":[{"_time":"2023-08-27T02:25:00.000+10:00","alertname":"TestAlert","clusterid":"testcluster","group":"testgroup","timestamp":"2023-08-27T02:25:01.GMT","username":"testuser"}], "highlighted":{}}`
 
 var EXPECTED_ALERT_DETAILS = []AlertDetails{{
-	AlertName:  string("TestAlert"),
-	User:       "testuser",
-	Group:      "testgroup",
-	Timestamp:  time.Date(2023, 8, 27, 02, 25, 1, 0, time.UTC),
-	ClusterIDs: []string{"testcluster"},
-	Reasons:    []string{},
+	AlertName:           string("TestAlert"),
+	User:                "testuser",
+	Group:               "testgroup",
+	Timestamp:           time.Date(2023, 8, 27, 02, 25, 1, 0, time.UTC),
+	ClusterIDs:          []string{"testcluster"},
+	ElevatedSummary:     []string{},
+	ElevatedSummaryText: "",
+	Reasons:             []string{},
+	ReasonsText:         "",
 }}
 
 func TestMain(m *testing.M) {
@@ -71,7 +74,7 @@ func TestSplunkServer_RetrieveSearchFromAlert(t *testing.T) {
 		want         []AlertDetails
 		wantErr      bool
 	}{{
-		"test",
+		"test1",
 		*splunkserver,
 		args{"test"},
 		EXPECTED_ALERT_DETAILS,
@@ -86,11 +89,11 @@ func TestSplunkServer_RetrieveSearchFromAlert(t *testing.T) {
 			got, err := tt.splunkserver.RetrieveSearchFromAlert(tt.args.sid)
 			log.Println(got.Details())
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SplunkServer.RetrieveSearchFromAlert() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("%s\n\tgot:\n%+v\n\twant error:\n%+v", tt.name, err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.Details(), tt.want) {
-				t.Errorf("SplunkServer.RetrieveSearchFromAlert() = %v, want %v", got.Details(), tt.want)
+				t.Errorf("%s\n\tgot:\n%+v\n\twant:\n%+v", tt.name, got, tt.want)
 			}
 		})
 	}
