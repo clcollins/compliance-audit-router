@@ -24,7 +24,7 @@ Alternatively, configuration options may be set using environment variables acco
 
 ### Configuration Values
 
-#### General Configuration
+#### General Configuration 
 
 verbose
 : Turns on more verbose logging output. Default: false
