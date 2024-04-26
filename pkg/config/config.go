@@ -38,6 +38,27 @@ var defaultMessageTemplate = "{{.Username}}\n\n" +
 
 var AppConfig Config
 
+var keys = []string{
+	"splunkconfig.host",
+	"splunkconfig.allowinsecure",
+	"splunkconfig.token",
+	"jiraconfig.host",
+	"jiraconfig.token",
+	"jiraconfig.allowinsecure",
+	"jiraconfig.username",
+	"jiraconfig.key",
+	"jiraconfig.issuetype",
+	"jiraconfig.transitions",
+	"ldapconfig.host",
+	"ldapconfig.allowinsecure",
+	"ldapconfig.username",
+	"ldapconfig.password",
+	"ldapconfig.searchbase",
+	"ldapconfig.scope",
+	"ldapconfig.attributes",
+	"ldapconfig.enabled",
+}
+
 type Config struct {
 	Verbose         bool
 	DryRun          bool
@@ -50,14 +71,14 @@ type Config struct {
 }
 
 type LDAPConfig struct {
-	Host               string
-	InsecureSkipVerify bool
-	Username           string
-	Password           string
-	SearchBase         string
-	Scope              string
-	Attributes         []string
-	Enabled            bool
+	Host          string
+	AllowInsecure bool
+	Username      string
+	Password      string
+	SearchBase    string
+	Scope         string
+	Attributes    []string
+	Enabled       bool
 }
 
 type SplunkConfig struct {
@@ -97,17 +118,25 @@ func LoadConfig() {
 	viper.SetConfigName(Appname)
 
 	viper.SetEnvPrefix("CAR")
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`)) // Replace dots from the nested structs with _ when reading from env
+	viper.AutomaticEnv()                                   // read in environment variables that match
 
 	err = viper.ReadInConfig() // Find and read the config file
 	if err != nil {            // Handle errors reading the config file
-		panic(err)
+		log.Print(err)
 	}
 
 	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
 	viper.SetDefault("Verbose", false)
 	viper.SetDefault("DryRun", false)
 	viper.SetDefault("ListenPort", 8080)
+
+	viper.SetDefault("ldapconfig.enabled", false)
+	viper.SetDefault("jiraconfig.dev", false)
+
+	// This BindEnv() with "keys" []string is a workaround until viper.BindStruct() makes it into a viper release
+	// and is here in case config data is passed by ENV var
+	viper.BindEnv(keys...)
 
 	err = viper.Unmarshal(&AppConfig)
 	if err != nil {
@@ -156,24 +185,12 @@ func fieldsAreNotNil(a *Config) []error {
 		value string
 	}{
 		{
-			name:  "LDAPConfig.Host",
-			value: a.LDAPConfig.Host,
-		},
-		{
 			name:  "SplunkConfig.Host",
 			value: a.SplunkConfig.Host,
 		},
 		{
 			name:  "JiraConfig.Host",
 			value: a.JiraConfig.Host,
-		},
-		{
-			name:  "LDAPConfig.SearchBase",
-			value: a.LDAPConfig.SearchBase,
-		},
-		{
-			name:  "LDAPConfig.Scope",
-			value: a.LDAPConfig.Scope,
 		},
 		{
 			name:  "SplunkConfig.Token",
@@ -193,6 +210,27 @@ func fieldsAreNotNil(a *Config) []error {
 		},
 	}
 
+	if a.LDAPConfig.Enabled {
+		nilLDAPStringTests := []struct {
+			name  string
+			value string
+		}{
+			{
+				name:  "LDAPConfig.Host",
+				value: a.LDAPConfig.Host,
+			},
+			{
+				name:  "LDAPConfig.SearchBase",
+				value: a.LDAPConfig.SearchBase,
+			},
+			{
+				name:  "LDAPConfig.Scope",
+				value: a.LDAPConfig.Scope,
+			},
+		}
+
+		nilStringTests = append(nilStringTests, nilLDAPStringTests...)
+	}
 	for _, i := range nilStringTests {
 		if i.value == "" {
 			// Use strings.ToLower() to match the YAML in the config file to avoid confusion

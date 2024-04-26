@@ -30,14 +30,11 @@ func TestFieldsAreNotNil(t *testing.T) {
 			"Empty configs should fail",
 			&Config{},
 			[]error{
-				configError{Err: "missing required configuration value: ldapconfig.host"},
 				configError{Err: "missing required configuration value: splunkconfig.host"},
 				configError{Err: "missing required configuration value: jiraconfig.host"},
 				configError{Err: "missing required configuration value: jiraconfig.token"},
 				configError{Err: "missing required configuration value: jiraconfig.key"},
 				configError{Err: "missing required configuration value: jiraconfig.issuetype"},
-				configError{Err: "missing required configuration value: ldapconfig.searchbase"},
-				configError{Err: "missing required configuration value: ldapconfig.scope"},
 			},
 		},
 		{
