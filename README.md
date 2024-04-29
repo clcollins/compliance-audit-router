@@ -16,6 +16,36 @@
 
 A tool to receive compliance alert webhooks from an external source (eg. Splunk), look up the responsible engineer's information (eg. from LDAP), and create a compliance report ticket (eg. Jira) assigned to the engineer for follow-up.
 
+
+```txt
+   ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+   │                                                                                                                       │
+   │                                  1                                                3                                   │
+   │                                                                                                                       │
+   │          ┌────────────► Alert Notification ────────────┐      ┌──────────► Create Compliance ─────────┐               │
+   │          │                    Webhook                  │      │                 Issue                 │               │
+   │          │                                             ▼      │                                       ▼               │
+   │ ┌────────┴───────┐                                ┌───────────┴────┐                             ┌──────────────────┐ │
+   │ │                │                                │                │                             │                  │ │
+   │ │  SEIM Service  │                                │   Compliance   │                             │  Issue Tracking  │ │
+   │ │  (eg: Splunk)  │                                │  Audit Router  │                             │    (eg: Jira)    │ │
+   │ │                │                                │                │                             │                  │ │
+   │ └────────────────┘                                └────┬───────────┘                             └──────────────────┘ │
+   │          ▲                                             │      ▲                                       ▲               │
+   │          │                Retrieve Alert               │      │            Listen for Issue           │               │
+   │          └───────────────    Details     ◄─────────────┘      └─────────►  State Transition  ◄────────┘               │
+   │                                                                               and Update                              │
+   │                                 2                                                 4                                   │
+   │                                                                                                                       │
+   └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+      1. Compliance Audit Router (CAR) receives incoming alert notification webhook from the SEIM service
+      2. CAR retrieves details of the triggered alert from the SEIM service
+      3. CAR creates a compliance tracking issue in the Issue Tracking service
+      4. CAR listens for issue state transition/lifecycle changes and updates as necessary
+```
+
 ## Configuration
 
 Configuration is managed in the `~/.config/compliance-audit-router/compliance-audit-router.yaml` file.
