@@ -1,0 +1,68 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: compliance-audit-router-staging
+objects:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name:
+        app: compliance-audit-router
+    spec:
+      replicas: ${REPLICAS}
+      selector:
+        matchLabels:
+          app: compliance-audit-router
+      template:
+        metadata:
+          labels:
+            app: compliance-audit-router
+        spec:
+          containers:
+            - name: compliance-audit-router
+              imagePullPolicy: Always
+              # yamllint disable-line rule:line-length
+              image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
+              env:
+                - name: CAR_JIRACONFIG_TOKEN
+                  valueFrom:
+                    secretKeyRef: ${JIRA_SECRET_REF}
+                - name: CAR_SPLUNKCONFIG_TOKEN
+                  valueFrom:
+                    secretKeyRef: ${SPLUNK_SECRET_REF}
+              resources:
+                requests:
+                  cpu: ${REQUESTS_CPU}
+                  memory: ${REQUESTS_MEM}
+                limits:
+                  memory: ${LIMITS_MEM}
+              restartPolicy: Always
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: compliance-audit-router
+      labels:
+        app: compliance-audit-router
+      spec:
+        host: ${ROUTE_HOSTNAME}.${ROUTE_CLUSTER_DOMAIN}
+        port:
+          targetPort: ${LISTEN_PORT}
+        to:
+          kind: Service
+          name: compliance-audit-router
+        tls:
+          termination: edge
+  - apiVersion: apps/v1
+    kind: Service
+    metadata:
+      name: compliance-audit-router
+      labels:
+        app: compliance-audit-router
+      spec:
+        selector:
+          app: compliance-audit-router
+        ports:
+          - protocol: TCP
+            port: ${LISTEN_PORT}
+            targetPort: ${LISTEN_PORT}
