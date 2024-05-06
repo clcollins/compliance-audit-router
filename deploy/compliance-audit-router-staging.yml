@@ -23,7 +23,7 @@ objects:
             - name: compliance-audit-router
               imagePullPolicy: Always
               # yamllint disable-line rule:line-length
-              image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
+              image: "quay.op/app-sre/compliance-audit-router:${IMAGE_TAG}"
               env:
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
