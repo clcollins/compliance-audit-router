@@ -3,6 +3,23 @@ apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
   name: compliance-audit-router-staging
+parameters:
+- name: "IMAGE_REGISTRY"
+  displayName: "Image Registry"
+  value: "quay.io"
+  required: true
+- name: "IMAGE_REPOSITORY"
+  displayName: "Image Repository"
+  value: "app-sre"
+  required: true
+- name: "IMAGE_NAME"
+  displayName: "Image Name"
+  value: "compliance-audit-router"
+  required: true
+- name: "IMAGE_TAG"
+  displayName: "Image tag"
+  required: true
+  value: "latest"
 objects:
   - apiVersion: apps/v1
     kind: Deployment
@@ -23,7 +40,7 @@ objects:
             - name: compliance-audit-router
               imagePullPolicy: Always
               # yamllint disable-line rule:line-length
-              image: "quay.op/app-sre/compliance-audit-router:${IMAGE_TAG}"
+              image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
               env:
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
