@@ -24,7 +24,8 @@ objects:
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name:
+      name: compliance-audit-router
+      labels:
         app: compliance-audit-router
     spec:
       replicas: ${REPLICAS}
