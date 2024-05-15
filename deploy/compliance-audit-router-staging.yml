@@ -28,7 +28,7 @@ parameters:
     required: true
   - name: "REPLICAS"
     displayName: "Number of Deployment replicas"
-    value: 2
+    value: "2"
     required: false
   - name: "REQUESTS_CPU"
     displayName: "CPU Requests"
