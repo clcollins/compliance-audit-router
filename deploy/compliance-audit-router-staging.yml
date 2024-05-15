@@ -4,22 +4,56 @@ kind: Template
 metadata:
   name: compliance-audit-router-staging
 parameters:
-- name: "IMAGE_REGISTRY"
-  displayName: "Image Registry"
-  value: "quay.io"
-  required: true
-- name: "IMAGE_REPOSITORY"
-  displayName: "Image Repository"
-  value: "app-sre"
-  required: true
-- name: "IMAGE_NAME"
-  displayName: "Image Name"
-  value: "compliance-audit-router"
-  required: true
-- name: "IMAGE_TAG"
-  displayName: "Image tag"
-  required: true
-  value: "latest"
+  - name: "IMAGE_REGISTRY"
+    displayName: "Image Registry"
+    value: "quay.io"
+    required: false
+  - name: "IMAGE_REPOSITORY"
+    displayName: "Image Repository"
+    value: "app-sre"
+    required: false
+  - name: "IMAGE_NAME"
+    displayName: "Image Name"
+    value: "compliance-audit-router"
+    required: false
+  - name: "IMAGE_TAG"
+    displayName: "Image tag"
+    required: true
+    value: "latest"
+  - name: "JIRA_SECRET_REF"
+    displayName: "Jira token name"
+    required: true
+  - name: "SPLUNK_SECRET_REF"
+    displayName: "Splunk token name"
+    required: true
+  - name: "REPLICAS"
+    displayName: "Number of Deployment replicas"
+    value: 2
+    required: false
+  - name: "REQUESTS_CPU"
+    displayName: "CPU Requests"
+    value: "300m"
+    required: false
+  - name: "REQUESTS_MEM"
+    displayName: "Memory Requests"
+    value: "2Gi"
+    required: false
+  - name: "LIMITS_MEM"
+    displayName: "Memory Limits"
+    value: "2Gi"
+    required: false
+  - name: "LISTEN_PORT"
+    displayName: "Port to listen on"
+    value: 8080
+    required: false
+  # This is the FOO part of FOO.apps.mycluster.com
+  - name: "ROUTE_HOSTNAME"
+    displayName: "Hostname for the incoming route (not fully qualified)"
+    required: true
+  # This is the apps.mycluster.com part of FOO.apps.mycluster.com
+  - name: "ROUTE_CLUSTER_DOMAIN"
+    displayName: "Cluster *apps domain (fully qualified)"
+    required: true
 objects:
   - apiVersion: apps/v1
     kind: Deployment
