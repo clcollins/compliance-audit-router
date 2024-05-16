@@ -20,14 +20,18 @@ parameters:
     displayName: "Image tag"
     required: true
     value: "latest"
-  - name: "JIRA_SECRET_REF"
+  - name: "JIRA_SECRET_REF_KEY"
+    displayName: "Jira token secret data key"
+    required: true
+  - name: "SPLUNK_SECRET_REF_KEY"
+    displayName: "Splunk token secret data key"
+    required: true
+  - name: "JIRA_SECRET_REF_NAME"
     displayName: "Jira token name"
-    required: false
-    value: "placeholder"
-  - name: "SPLUNK_SECRET_REF"
+    required: true
+  - name: "SPLUNK_SECRET_REF_NAME"
     displayName: "Splunk token name"
-    value: "placeholder"
-    required: false
+    required: true
   - name: "REPLICAS"
     displayName: "Number of Deployment replicas"
     value: "2"
@@ -81,10 +85,14 @@ objects:
               env:
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
-                    secretKeyRef: ${JIRA_SECRET_REF}
+                    secretKeyRef:
+                      name: ${JIRA_SECRET_REF_NAME}
+                      key: ${JIRA_SECRET_REF_KEY}
                 - name: CAR_SPLUNKCONFIG_TOKEN
                   valueFrom:
-                    secretKeyRef: ${SPLUNK_SECRET_REF}
+                    secretKeyRef:
+                      name: ${SPLUNK_SECRET_REF_NAME}
+                      key: ${SPLUNK_SECRET_REF_KEY}
               resources:
                 requests:
                   cpu: ${REQUESTS_CPU}
