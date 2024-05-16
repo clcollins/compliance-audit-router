@@ -20,12 +20,12 @@ parameters:
     displayName: "Image tag"
     required: true
     value: "latest"
-  - name: "JIRA_SECRET_REF"
-    displayName: "Jira token name"
-    required: true
-  - name: "SPLUNK_SECRET_REF"
-    displayName: "Splunk token name"
-    required: true
+#  - name: "JIRA_SECRET_REF"
+#    displayName: "Jira token name"
+#    required: false
+#  - name: "SPLUNK_SECRET_REF"
+#    displayName: "Splunk token name"
+#    required: false
   - name: "REPLICAS"
     displayName: "Number of Deployment replicas"
     value: "2"
@@ -76,13 +76,13 @@ objects:
               imagePullPolicy: Always
               # yamllint disable-line rule:line-length
               image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
-              env:
-                - name: CAR_JIRACONFIG_TOKEN
-                  valueFrom:
-                    secretKeyRef: ${JIRA_SECRET_REF}
-                - name: CAR_SPLUNKCONFIG_TOKEN
-                  valueFrom:
-                    secretKeyRef: ${SPLUNK_SECRET_REF}
+#              env:
+#                - name: CAR_JIRACONFIG_TOKEN
+#                  valueFrom:
+#                    secretKeyRef: ${JIRA_SECRET_REF}
+#                - name: CAR_SPLUNKCONFIG_TOKEN
+#                  valueFrom:
+#                    secretKeyRef: ${SPLUNK_SECRET_REF}
               resources:
                 requests:
                   cpu: ${REQUESTS_CPU}
