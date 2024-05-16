@@ -52,6 +52,14 @@ parameters:
     displayName: "Port to listen on"
     value: "8080"
     required: false
+  - name: "DRYRUN"
+    displayName: "Dry-run mode"
+    value: "true"
+    required: false
+  - name: "VERBOSE"
+    displayName: "Verbose output"
+    value: "true"
+    required: false
   # This is the FOO part of FOO.apps.mycluster.com
   - name: "ROUTE_HOSTNAME"
     displayName: "Hostname for the incoming route (not fully qualified)"
@@ -83,6 +91,10 @@ objects:
               # yamllint disable-line rule:line-length
               image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
               env:
+                - name: CAR_VERBOSE
+                  value: ${VERBOSE}
+                - name: CAR_DRYRUN
+                  value: ${DRYRUN}
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
                     secretKeyRef:
