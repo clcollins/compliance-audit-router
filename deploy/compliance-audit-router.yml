@@ -2,7 +2,7 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: compliance-audit-router-staging
+  name: compliance-audit-router
 parameters:
   - name: "IMAGE_REGISTRY"
     displayName: "Image Registry"
