@@ -112,21 +112,6 @@ objects:
                 limits:
                   memory: ${LIMITS_MEM}
               restartPolicy: Always
-  - apiVersion: route.openshift.io/v1
-    kind: Route
-    metadata:
-      name: compliance-audit-router
-      labels:
-        app: compliance-audit-router
-      spec:
-        host: ${ROUTE_HOSTNAME}.${ROUTE_CLUSTER_DOMAIN}
-        port:
-          targetPort: ${LISTEN_PORT}
-        to:
-          kind: Service
-          name: compliance-audit-router
-        tls:
-          termination: edge
   - apiVersion: apps/v1
     kind: Service
     metadata:
