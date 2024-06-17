@@ -1,6 +1,6 @@
 ARG PROJECT="compliance-audit-router"
 ARG PROJECT_DESCRIPTION="A daemon processing incoming SEIM alerts into cards in an issue-tracking system."
-ARG BUILDER_IMAGE=registry.ci.openshift.org/openshift/release:golang-1.20
+ARG BUILDER_IMAGE=registry.ci.openshift.org/openshift/release:golang-1.21
 
 # BASE_IMAGE must be declared before the first FROM to be accesible in later build stages (eg: to use in second FROM)
 ARG BASE_IMAGE=quay.io/app-sre/ubi9-ubi-minimal:9.3
