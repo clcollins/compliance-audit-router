@@ -20,6 +20,10 @@ parameters:
     displayName: "Image tag"
     required: true
     value: "latest"
+  - name: "IMAGE_PULL_SECRET"
+    displayName: "Image Pull Secret"
+    required: true
+    value: "quay.io"
   - name: "JIRA_SECRET_REF_KEY"
     displayName: "Jira token secret data key"
     required: true
@@ -88,6 +92,7 @@ objects:
           containers:
             - name: compliance-audit-router
               imagePullPolicy: Always
+              imagePullSecret: ${IMAGE_PULL_SECRET}
               # yamllint disable-line rule:line-length
               image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
               env:
