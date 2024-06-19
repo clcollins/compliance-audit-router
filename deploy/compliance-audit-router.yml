@@ -111,7 +111,6 @@ objects:
                   memory: ${REQUESTS_MEM}
                 limits:
                   memory: ${LIMITS_MEM}
-              restartPolicy: Always
   - apiVersion: apps/v1
     kind: Service
     metadata:
