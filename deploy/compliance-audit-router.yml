@@ -117,10 +117,10 @@ objects:
       name: compliance-audit-router
       labels:
         app: compliance-audit-router
-      spec:
-        selector:
-          app: compliance-audit-router
-        ports:
-          - protocol: TCP
-            port: ${LISTEN_PORT}
-            targetPort: ${LISTEN_PORT}
+    spec:
+      selector:
+        app: compliance-audit-router
+      ports:
+        - protocol: TCP
+          port: ${LISTEN_PORT}
+          targetPort: ${LISTEN_PORT}
