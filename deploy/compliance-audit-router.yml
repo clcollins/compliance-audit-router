@@ -54,7 +54,7 @@ parameters:
     required: false
   - name: "LISTEN_PORT"
     displayName: "Port to listen on"
-    value: 8080
+    value: "8080"
     required: false
   - name: "DRYRUN"
     displayName: "Dry-run mode"
