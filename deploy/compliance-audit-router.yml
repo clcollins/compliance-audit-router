@@ -111,7 +111,7 @@ objects:
                   memory: ${REQUESTS_MEM}
                 limits:
                   memory: ${LIMITS_MEM}
-  - apiVersion: apps/v1
+  - apiVersion: core/v1
     kind: Service
     metadata:
       name: compliance-audit-router
