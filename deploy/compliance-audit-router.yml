@@ -54,7 +54,7 @@ parameters:
     required: false
   - name: "LISTEN_PORT"
     displayName: "Port to listen on"
-    value: 8080
+    value: "8080"
     required: false
   - name: "DRYRUN"
     displayName: "Dry-run mode"
@@ -127,5 +127,5 @@ objects:
         app: compliance-audit-router
       ports:
         - protocol: TCP
-          port: ${LISTEN_PORT}
-          targetPort: ${LISTEN_PORT}
+          port: "${{LISTEN_PORT}}"
+          targetPort: "${{LISTEN_PORT}}"
