@@ -64,14 +64,6 @@ parameters:
     displayName: "Verbose output"
     value: "true"
     required: false
-  # This is the FOO part of FOO.apps.mycluster.com
-  - name: "ROUTE_HOSTNAME"
-    displayName: "Hostname for the incoming route (not fully qualified)"
-    required: true
-  # This is the apps.mycluster.com part of FOO.apps.mycluster.com
-  - name: "ROUTE_CLUSTER_DOMAIN"
-    displayName: "Cluster *apps domain (fully qualified)"
-    required: true
 objects:
   - apiVersion: apps/v1
     kind: Deployment
