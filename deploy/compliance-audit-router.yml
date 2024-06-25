@@ -72,7 +72,6 @@ objects:
       labels:
         app: compliance-audit-router
     spec:
-      replicas: ${{REPLICAS}}
       selector:
         matchLabels:
           app: compliance-audit-router
@@ -83,10 +82,12 @@ objects:
         spec:
           containers:
             - name: compliance-audit-router
-              imagePullPolicy: Always
-              imagePullSecret: ${IMAGE_PULL_SECRET}
               # yamllint disable-line rule:line-length
               image: ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}
+              imagePullPolicy: Always
+              ports:
+                - containerPort: "${{LISTEN_PORT}}"
+                  protocol: TCP
               env:
                 - name: CAR_VERBOSE
                   value: ${VERBOSE}
@@ -95,19 +96,36 @@ objects:
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: ${JIRA_SECRET_REF_NAME}
                       key: ${JIRA_SECRET_REF_KEY}
+                      name: ${JIRA_SECRET_REF_NAME}
                 - name: CAR_SPLUNKCONFIG_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: ${SPLUNK_SECRET_REF_NAME}
                       key: ${SPLUNK_SECRET_REF_KEY}
+                      name: ${SPLUNK_SECRET_REF_NAME}
               resources:
+                limits:
+                  memory: ${LIMITS_MEM}
                 requests:
                   cpu: ${REQUESTS_CPU}
                   memory: ${REQUESTS_MEM}
-                limits:
-                  memory: ${LIMITS_MEM}
+              livenessProbe:
+                httpGet:
+                  path: "/healthz"
+                  port: "${{LISTEN_PORT}}"
+                initialDelaySeconds: 5
+                periodSeconds: 5
+              readinessProbe:
+                httpGet:
+                  path: "/healthz"
+                  port: "${{LISTEN_PORT}}"
+                initialDelaySeconds: 5
+                periodSeconds: 5
+          imagePullSecrets:
+            - ${IMAGE_PULL_SECRET}
+      replicas: ${{REPLICAS}}
+      revisionhistoryLimit: 3
+      progressDeadlineSeconds: 300
   - apiVersion: v1
     kind: Service
     metadata:
@@ -118,6 +136,7 @@ objects:
       selector:
         app: compliance-audit-router
       ports:
-        - protocol: TCP
-          port: "${{LISTEN_PORT}}"
+          # LISTEN_PORT must be in quotes to be parsed properly as an integer
+        - port: "${{LISTEN_PORT}}"
           targetPort: "${{LISTEN_PORT}}"
+          protocol: TCP
