@@ -17,12 +17,12 @@ limitations under the License.
 package config
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"log"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -57,6 +57,10 @@ var keys = []string{
 	"ldapconfig.scope",
 	"ldapconfig.attributes",
 	"ldapconfig.enabled",
+	"verbose",
+	"dryrun",
+	"listenport",
+	"messagetemplate",
 }
 
 type Config struct {
@@ -106,6 +110,28 @@ func (ce configError) Error() string {
 	return ce.Err
 }
 
+func filterSensitiveData(k string, v interface{}) string {
+	if strings.Contains(k, "token") {
+		v = "*****"
+	}
+	return fmt.Sprintf("found key %s: %v", k, v)
+}
+
+// checkSettings prints the viper info passed into the program
+func checkSettings() {
+	settings := viper.GetViper().AllSettings()
+	for key, value := range settings {
+		// Handle nested configs
+		if reflect.ValueOf(value).Kind() == reflect.Map {
+			for k, v := range value.(map[string]interface{}) {
+				log.Print(filterSensitiveData(fmt.Sprintf("%s.%s", key, k), v))
+			}
+		} else {
+			log.Print(filterSensitiveData(key, value))
+		}
+	}
+}
+
 func LoadConfig() {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -117,26 +143,33 @@ func LoadConfig() {
 	viper.SetConfigType("yaml")
 	viper.SetConfigName(Appname)
 
-	viper.SetEnvPrefix("CAR")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`)) // Replace dots from the nested structs with _ when reading from env
-	viper.AutomaticEnv()                                   // read in environment variables that match
+	viper.SetEnvPrefix("CAR")
 
-	err = viper.ReadInConfig() // Find and read the config file
-	if err != nil {            // Handle errors reading the config file
-		log.Print(err)
+	// Bind the keys to environment variables if set
+	for _, k := range keys {
+		viper.BindEnv(k)
 	}
 
-	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
-	viper.SetDefault("Verbose", false)
-	viper.SetDefault("DryRun", false)
-	viper.SetDefault("ListenPort", 8080)
+	viper.AutomaticEnv() // read in environment variables that match
 
+	viper.SetDefault("MessageTemplate", defaultMessageTemplate)
+	viper.SetDefault("Verbose", true)
+	viper.SetDefault("DryRun", true)
+	viper.SetDefault("ListenPort", 8080)
 	viper.SetDefault("ldapconfig.enabled", false)
 	viper.SetDefault("jiraconfig.dev", false)
 
-	// This BindEnv() with "keys" []string is a workaround until viper.BindStruct() makes it into a viper release
-	// and is here in case config data is passed by ENV var
-	viper.BindEnv(keys...)
+	err = viper.ReadInConfig() // Find and read the config file
+	if err != nil {            // Handle errors reading the config file
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Print("no config file found; using environment variables")
+		} else {
+			log.Print(err)
+		}
+	}
+
+	checkSettings()
 
 	err = viper.Unmarshal(&AppConfig)
 	if err != nil {
@@ -145,7 +178,7 @@ func LoadConfig() {
 
 	if !AppConfig.Valid() {
 		// If the config is invalid, log the errors and exit right away
-		log.Fatal("FATAL: Configuration invalid - exiting")
+		log.Fatal("FATAL: configuration invalid - exiting")
 	}
 }
 
@@ -169,7 +202,9 @@ func (a *Config) Valid() bool {
 	}
 
 	if configErrors != nil {
-		log.Print(errors.Join(configErrors...))
+		for _, e := range configErrors {
+			log.Print(e)
+		}
 		return false
 	}
 
