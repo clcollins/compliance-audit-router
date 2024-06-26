@@ -70,4 +70,4 @@ list:
 # `go install github.com/google/addlicense@latest`
 .PHONY: license
 license:
-	@addlicense -c "Red Hat, Inc."  -l apache -v -y 2021-2024 .*go **/*.go **/**/*.go
+	@addlicense -c "Red Hat, Inc."  -l apache -v -y 2021-2024  **/*.go **/**/*.go
