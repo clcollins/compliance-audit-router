@@ -61,6 +61,8 @@ func main() {
 	log.Printf("initializing routes")
 	listeners.InitRoutes(r)
 
+	// Metrics registration exposes Prometheus metrics on /metrics
+	// NOTE: This does not use a go-chi route but is logged.
 	log.Printf("registering metrics")
 	metrics.RegisterMetrics()
 
