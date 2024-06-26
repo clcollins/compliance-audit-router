@@ -19,6 +19,7 @@ package ldap
 import (
 	"errors"
 	"fmt"
+
 	"github.com/go-ldap/ldap"
 	"github.com/openshift/compliance-audit-router/pkg/config"
 )
@@ -63,7 +64,7 @@ func LookupUser(username string) (string, string, error) {
 	conn, err := ldap.DialURL(config.AppConfig.LDAPConfig.Host)
 	defer conn.Close()
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("ldap.LookupUser(): failed to create connection: %w", err)
 	}
 
 	if config.AppConfig.LDAPConfig.Username != "" {
@@ -75,7 +76,7 @@ func LookupUser(username string) (string, string, error) {
 		err = conn.UnauthenticatedBind("")
 	}
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("ldap.LookupUser(): failed bind: %w", err)
 	}
 
 	searchRequest := ldap.NewSearchRequest(config.AppConfig.LDAPConfig.SearchBase,
@@ -84,26 +85,26 @@ func LookupUser(username string) (string, string, error) {
 
 	result, err := conn.Search(searchRequest)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("ldap.LookupUser(): failed retrieving search results: %w", err)
 	}
 
 	var ldapUsername string
 	var ldapManager string
 
 	if len(result.Entries) == 0 {
-		return "", "", errors.New("user not found")
+		return "", "", errors.New("ldap.LookUser(): user not found")
 	} else if len(result.Entries) > 1 {
-		return "", "", errors.New("multiple ldap entries found, please check your ldap config")
+		return "", "", errors.New("ldap.LookupUser(): multiple ldap entries found, please check your ldap config")
 	} else {
 		entry := result.Entries[0]
 
 		ldapUsername, err = getUID(entry.DN)
 		if err != nil {
-			return "", "", errors.New("could not parse ldap username")
+			return "", "", errors.New("ldap.LookupUser(): could not parse ldap username")
 		}
 		ldapManager, err = getUID(entry.GetAttributeValue("manager"))
 		if err != nil {
-			return "", "", errors.New("could not parse manager's ldap username")
+			return "", "", errors.New("ldap.LookupUser(): could not parse manager's ldap username")
 		}
 	}
 
@@ -113,7 +114,7 @@ func LookupUser(username string) (string, string, error) {
 func getUID(dn string) (string, error) {
 	parsedDN, err := ldap.ParseDN(dn)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("error parsing dn: %v", err))
+		return "", fmt.Errorf("ldap.getUID(): error parsing dn: %w", err)
 	}
 	for _, rdn := range parsedDN.RDNs {
 		for _, attribute := range rdn.Attributes {
@@ -122,5 +123,5 @@ func getUID(dn string) (string, error) {
 			}
 		}
 	}
-	return "", errors.New("no uid field found for given ldap string")
+	return "", errors.New("ldap.getUID(): no uid field found for given ldap string")
 }

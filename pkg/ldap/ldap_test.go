@@ -42,16 +42,16 @@ func TestGetUID(t *testing.T) {
 		{
 			name:          "no uid present",
 			input:         "ou=users,dc=redhat,dc=com",
-			expectedError: "no uid field found for given ldap string",
+			expectedError: "ldap.getUID(): no uid field found for given ldap string",
 		},
 		{
 			name:          "malformed dn",
 			input:         "uid:avulaj",
-			expectedError: "error parsing dn: DN ended with incomplete type, value pair",
+			expectedError: "ldap.getUID(): error parsing dn: DN ended with incomplete type, value pair",
 		},
 		{
 			name:          "empty input",
-			expectedError: "no uid field found for given ldap string",
+			expectedError: "ldap.getUID(): no uid field found for given ldap string",
 		},
 	}
 
