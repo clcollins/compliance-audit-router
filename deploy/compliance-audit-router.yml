@@ -24,8 +24,20 @@ parameters:
     displayName: "Image Pull Secret"
     required: true
     value: "quay.io"
+  - name: "JIRA_PROJECT_KEY"
+    displayName: "Jira Project Key"
+    required: true
+  - name: "JIRA_HOST"
+    displayName: "Jira service host"
+    required: true
+  - name: "JIRA_USERNAME"
+    displayName: "Jira username"
+    required: true
   - name: "JIRA_SECRET_REF_KEY"
     displayName: "Jira token secret data key"
+    required: true
+  - name: "SPLUNK_HOST"
+    displayName: "Splunk service host"
     required: true
   - name: "SPLUNK_SECRET_REF_KEY"
     displayName: "Splunk token secret data key"
@@ -93,11 +105,19 @@ objects:
                   value: ${VERBOSE}
                 - name: CAR_DRYRUN
                   value: ${DRYRUN}
+                - name: CAR_JIRACONFIG_KEY
+                  value: ${JIRA_PROJECT_KEY}
+                - name: CAR_JIRACONFIG_HOST
+                  value: ${JIRA_HOST}
+                - name: CAR_JIRA_USERNAME
+                  value: ${JIRA_USERNAME}
                 - name: CAR_JIRACONFIG_TOKEN
                   valueFrom:
                     secretKeyRef:
                       key: ${JIRA_SECRET_REF_KEY}
                       name: ${JIRA_SECRET_REF_NAME}
+                - name: CAR_SPLUNKCONFIG_HOST
+                  value: ${SPLUNK_HOST}
                 - name: CAR_SPLUNKCONFIG_TOKEN
                   valueFrom:
                     secretKeyRef:
@@ -124,7 +144,7 @@ objects:
           imagePullSecrets:
             - name: ${IMAGE_PULL_SECRET}
       replicas: ${{REPLICAS}}
-      revisionhistoryLimit: 3
+      revisionHistoryLimit: 3
       progressDeadlineSeconds: 300
   - apiVersion: v1
     kind: Service
