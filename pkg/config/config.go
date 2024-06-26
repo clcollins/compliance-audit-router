@@ -159,6 +159,12 @@ func LoadConfig() {
 	viper.SetDefault("ListenPort", 8080)
 	viper.SetDefault("ldapconfig.enabled", false)
 	viper.SetDefault("jiraconfig.dev", false)
+	viper.SetDefault("jiraconfig.transitions", map[string]string{
+		"initial": "In Progress",
+		"sre":     "Pending Approval",
+		"manager": "Done"},
+	)
+	viper.SetDefault("jiraconfig.issuetype", "Task")
 
 	err = viper.ReadInConfig() // Find and read the config file
 	if err != nil {            // Handle errors reading the config file
