@@ -23,7 +23,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/spf13/viper"
 
 	"github.com/openshift/compliance-audit-router/pkg/config"
 	"github.com/openshift/compliance-audit-router/pkg/listeners"
@@ -36,21 +35,8 @@ func init() {
 }
 
 func main() {
-	log.Printf("using config file: %s", viper.ConfigFileUsed())
-
 	if config.AppConfig.DryRun {
-		log.Printf("dryRun:     %t", config.AppConfig.DryRun)
-	}
-
-	if config.AppConfig.Verbose {
-		log.Printf("verbose:     %t", config.AppConfig.Verbose)
-		log.Printf("ldapEnabled: %t", config.AppConfig.LDAPConfig.Enabled)
-
-		if config.AppConfig.LDAPConfig.Enabled {
-			log.Printf("ldapHost:    %s", config.AppConfig.LDAPConfig.Host)
-		}
-		log.Printf("splunkHost:  %s", config.AppConfig.SplunkConfig.Host)
-		log.Printf("jiraHost:    %s", config.AppConfig.JiraConfig.Host)
+		log.Printf("running in dry-run mode; no actions will be taken")
 	}
 
 	var portString = ":" + fmt.Sprint(config.AppConfig.ListenPort)
@@ -58,13 +44,10 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.DefaultLogger)
 
+	metrics.RegisterMetrics()
+
 	log.Printf("initializing routes")
 	listeners.InitRoutes(r)
-
-	// Metrics registration exposes Prometheus metrics on /metrics
-	// NOTE: This does not use a go-chi route but is logged.
-	log.Printf("registering metrics")
-	metrics.RegisterMetrics()
 
 	log.Printf("listening on %s", portString)
 	log.Fatal(http.ListenAndServe(portString, r))

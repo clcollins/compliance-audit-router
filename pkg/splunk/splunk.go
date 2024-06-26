@@ -80,7 +80,7 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 	// Create a new HTTP client; don't modify the default client
 	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if err != nil {
-		return alert, err
+		return alert, fmt.Errorf("splunk.RetrieveSearchFromAlert(): %w", err)
 	}
 
 	if config.AppConfig.Verbose {
@@ -98,7 +98,7 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 
 	resp, err := splunkHttpClient.Do(req)
 	if err != nil {
-		return alert, err
+		return alert, fmt.Errorf("splunk.RetrieveSearchFromAlert(): %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return alert, fmt.Errorf("error retrieving search results from Splunk: %s", resp.Status)
@@ -114,7 +114,7 @@ func (s Server) RetrieveSearchFromAlert(sid string) (Alert, error) {
 		return alert, err
 	}
 
-	log.Printf("retrieved alert from Splunk: %s, %v", alert.SearchID, alert.Details())
-	return alert, err
+	log.Printf("splunk.RetrieveSearchFromAlert(): retrieved alert from Splunk: %s, %v", alert.SearchID, alert.Details())
+	return alert, nil
 
 }

@@ -174,6 +174,9 @@ func LoadConfig() {
 			log.Print(err)
 		}
 	}
+	if viper.ConfigFileUsed() != "" {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+	}
 
 	checkSettings()
 
@@ -186,9 +189,9 @@ func LoadConfig() {
 		// If the config is invalid, log the errors and exit right away
 		log.Fatal("FATAL: configuration invalid - exiting")
 	} else if !AppConfig.Valid() && AppConfig.DryRun {
-		log.Print("WARN: configuration invalid - continuing in dry-run mode")
+		log.Print("WARN: configuration invalid; continuing in dry-run mode")
 	} else {
-		log.Print("INFO: configuration valid")
+		log.Print("configuration valid")
 	}
 }
 

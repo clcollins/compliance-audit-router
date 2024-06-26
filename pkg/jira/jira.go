@@ -72,7 +72,7 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 
 	reporterUser, _, err := userService.GetSelf()
 	if err != nil {
-		return fmt.Errorf("failed to get Jira user for reporter: %w", err)
+		return fmt.Errorf("jira.CreateTicket(): failed to get Jira user for reporter: %w", err)
 	}
 
 	sreUser, err := getUserByName(userService, user)
@@ -113,7 +113,7 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to create issue: %w", err)
+		return fmt.Errorf("jira.CreateTicket(): failed to create issue: %w", err)
 	}
 
 	log.Printf("jira.CreateTicket(): created new issue with key %v", createdIssue.Key)
@@ -123,13 +123,13 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 		if config.AppConfig.Verbose {
 			log.Printf("jira.CreateTicket(): failed to parse message template from AppConfig; template: %v\n", config.AppConfig.MessageTemplate)
 		}
-		return fmt.Errorf("failed to parse message template from AppConfig: %w", err)
+		return fmt.Errorf("jira.CreateTicket(): failed to parse message template from AppConfig: %w", err)
 	}
 
 	var message bytes.Buffer
 	err = messageTemplate.Execute(&message, map[string]string{"Username": fmt.Sprintf("[~accountid:%v]", sreUser.AccountID)})
 	if err != nil {
-		return fmt.Errorf("failed to apply parsed template to the specified data object: %w", err)
+		return fmt.Errorf("jira.CreateTicket(): failed to apply parsed template to the specified data object: %w", err)
 	}
 
 	comment := &jira.Comment{Body: message.String()}
@@ -142,7 +142,7 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 	}
 
 	if err != nil {
-		return fmt.Errorf("issue %v was successfully created but failed to apply initial comment: %w", createdIssue.Key, err)
+		return fmt.Errorf("jira.CreateTicket(): issue %v was successfully created but failed to apply initial comment: %w", createdIssue.Key, err)
 	}
 
 	log.Printf("jira.CreateTicket(): initial comment successfully left on issue %v\n", createdIssue.Key)
@@ -151,7 +151,7 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 
 	initialStatusId, err := getTransitionId(issueService, createdIssue.ID, initialStatusName)
 	if err != nil {
-		return fmt.Errorf("failed to fetch ID for status %v: %w", initialStatusName, err)
+		return fmt.Errorf("jira.CreateTicket(): failed to fetch ID for status %v: %w", initialStatusName, err)
 	}
 
 	if config.AppConfig.DryRun {
@@ -159,7 +159,7 @@ func CreateTicket(userService *jira.UserService, issueService *jira.IssueService
 	} else {
 		_, err = issueService.DoTransition(createdIssue.ID, initialStatusId)
 		if err != nil {
-			return fmt.Errorf("failed to transition issue %v to status %v: %w", createdIssue.Key, initialStatusName, err)
+			return fmt.Errorf("jira.CreateTicket(): failed to transition issue %v to status %v: %w", createdIssue.Key, initialStatusName, err)
 		}
 	}
 
@@ -172,7 +172,7 @@ func HandleUpdate(issueService *jira.IssueService, webhook Webhook) error {
 	if config.AppConfig.DryRun {
 		log.Printf("jira.HandleUpdate(): dry-run mode: would have handled Jira webhook with issue, comment: %+v, %+v", webhook.Issue, webhook.Comment)
 		if config.AppConfig.Verbose {
-			log.Printf("jiraHandleUpdate(): dry-run mode: *jira.issueService: %+v", issueService)
+			log.Printf("jira.HandleUpdate(): dry-run mode: *jira.issueService: %+v", issueService)
 		}
 
 		return nil
@@ -180,7 +180,7 @@ func HandleUpdate(issueService *jira.IssueService, webhook Webhook) error {
 
 	webhookIssue, _, err := issueService.Get(webhook.Issue.ID, nil)
 	if err != nil {
-		return fmt.Errorf("failed to get issue %v from jira webhook: %w", webhook.Issue.Key, err)
+		return fmt.Errorf("jira.HandleUpdate(): failed to get issue %v from jira webhook: %w", webhook.Issue.Key, err)
 	}
 
 	var sreId string
@@ -208,12 +208,12 @@ func HandleUpdate(issueService *jira.IssueService, webhook Webhook) error {
 
 	transitionId, err := getTransitionId(issueService, webhookIssue.ID, transitionName)
 	if err != nil {
-		return fmt.Errorf("failed to get transition ID for status %v on issue %v: %w", transitionName, webhookIssue.Key, err)
+		return fmt.Errorf("jira.HandleUpdate(): failed to get transition ID for status %v on issue %v: %w", transitionName, webhookIssue.Key, err)
 	}
 
 	_, err = issueService.DoTransition(webhookIssue.ID, transitionId)
 	if err != nil {
-		return fmt.Errorf("failed to transition issue %v to status %v: %w", webhookIssue.Key, transitionName, err)
+		return fmt.Errorf("jira.HandleUpdate(): failed to transition issue %v to status %v: %w", webhookIssue.Key, transitionName, err)
 	}
 	log.Printf("jira.HandleUpdate(): successfully updated ticket %v to status %v after comment from %v", webhookIssue.Key, transitionName, webhook.Comment.Author.Name)
 
@@ -243,7 +243,7 @@ func getTransitionId(issueService *jira.IssueService, issueId string, status str
 
 	transitions, _, err := issueService.GetTransitions(issueId)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("jira.getTransitionId(): failed getting transitions: %w", err)
 	}
 
 	for _, t := range transitions {
@@ -251,7 +251,7 @@ func getTransitionId(issueService *jira.IssueService, issueId string, status str
 			return t.ID, nil
 		}
 	}
-	return "", fmt.Errorf("did not find status %v", status)
+	return "", fmt.Errorf("jira.getTransitionId(): did not find status %s", status)
 }
 
 func getUserByName(userService *jira.UserService, username string) (*jira.User, error) {
@@ -264,7 +264,7 @@ func getUserByName(userService *jira.UserService, username string) (*jira.User, 
 	}
 
 	if jiraUserLen := len(users); jiraUserLen != 1 {
-		return nil, fmt.Errorf("error finding user '%v': expected 1 user but found %v", username, jiraUserLen)
+		return nil, fmt.Errorf("jira.getUserByName(): error finding user '%v': expected 1 user but found %v", username, jiraUserLen)
 	}
 	return &users[0], nil
 }
