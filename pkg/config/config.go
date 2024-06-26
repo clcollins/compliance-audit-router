@@ -182,9 +182,13 @@ func LoadConfig() {
 		panic(err)
 	}
 
-	if !AppConfig.Valid() {
+	if !AppConfig.Valid() && !AppConfig.DryRun {
 		// If the config is invalid, log the errors and exit right away
 		log.Fatal("FATAL: configuration invalid - exiting")
+	} else if !AppConfig.Valid() && AppConfig.DryRun {
+		log.Print("WARN: configuration invalid - continuing in dry-run mode")
+	} else {
+		log.Print("INFO: configuration valid")
 	}
 }
 
